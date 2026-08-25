@@ -1,85 +1,161 @@
-# StayAdmin — Booking Admin Dashboard
+# ضِيافة — Dhiyafa Booking Dashboard
 
-A React + TypeScript admin dashboard for hotel booking management.
+منصة حجز فنادق سورية متكاملة مع لوحة تحكم إدارية.
 
-## Quick Start
+---
 
+## التقنيات المستخدمة
+
+### الفرونتاند
+- React 18 + TypeScript
+- Zustand (إدارة الحالة)
+- React Router v6
+- Recharts (الرسوم البيانية)
+- Lucide React (الأيقونات)
+- Framer Motion
+
+### الباكاند
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT للمصادقة
+- Nodemailer (إرسال إيميل OTP وتأكيد الحجز)
+- Multer (رفع الصور)
+- bcryptjs (تشفير كلمات السر)
+
+---
+
+## هيكل المشروع
+
+```
+booking-admin-dashboard/
+├── backend/                    # Node.js API
+│   ├── server.js               # نقطة الدخول
+│   ├── src/
+│   │   ├── db/
+│   │   │   └── connect.js      # الاتصال بـ MongoDB
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Notification.js
+│   │   │   └── SupportThread.js
+│   │   ├── routes/
+│   │   │   ├── auth.js         # تسجيل دخول، OTP، تسجيل
+│   │   │   ├── notifications.js
+│   │   │   ├── support.js      # دردشة الدعم الفني
+│   │   │   ├── upload.js       # رفع صور البروفايل
+│   │   │   └── bookings.js     # إرسال إيميل تأكيد الحجز
+│   │   ├── services/
+│   │   │   ├── emailService.js
+│   │   │   └── otpStore.js
+│   │   └── middleware/
+│   │       └── rateLimiter.js
+│   └── .env.example
+│
+├── src/                        # React Frontend
+│   ├── components/
+│   │   ├── Layout.tsx
+│   │   ├── HotelBookingFlow.tsx
+│   │   ├── RatingModal.tsx
+│   │   └── AvatarUpload.tsx
+│   ├── pages/
+│   │   ├── StartPage.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── SignupPage.tsx       # OTP + تسجيل مباشر
+│   │   ├── DashboardPage.tsx
+│   │   ├── bookings/
+│   │   ├── hotels/
+│   │   ├── analytics/
+│   │   ├── my-bookings/
+│   │   ├── notifications/
+│   │   ├── support/
+│   │   ├── profile/
+│   │   └── settings/
+│   └── store/
+│       ├── authStore.ts
+│       ├── bookingsStore.ts
+│       ├── notifEvents.ts
+│       ├── supportChatStore.ts
+│       └── ratingsStore.ts
+└── .gitignore
+```
+
+---
+
+## الميزات
+
+### المصادقة
+- تسجيل حساب جديد بـ OTP عبر Gmail / Yahoo / Outlook
+- تسجيل مباشر بدون OTP للإيميلات الأخرى
+- JWT للجلسات (صالح 7 أيام)
+
+### الأدوار
+| الدور | الصلاحيات |
+|-------|-----------|
+| `superadmin` | لوحة التحكم الكاملة، إدارة الحجوزات، الإشعارات، التحليلات |
+| `support` | صندوق الدعم الفني فقط |
+| `user` | حجز الفنادق، متابعة الحجوزات، الدعم الفني |
+
+### إدارة الحجوزات
+- دورة حياة كاملة: pending → accepted → paid → completed
+- إشعار فوري للمستخدم عند كل قرار
+- إرسال إيميل تأكيد HTML احترافي للمستخدمين (Gmail/Yahoo/Outlook)
+- تصدير الحجوزات كـ CSV
+
+### الإشعارات
+- إشعارات real-time عبر HTTP polling كل 30 ثانية
+- موجّهة لكل مستخدم حسب دوره
+
+### الدعم الفني
+- محادثات real-time بين المستخدمين وفريق الدعم
+- Feedback system
+- يعمل عبر أجهزة مختلفة
+
+### تقييم الفنادق
+- نجوم 1-5 + تعليق
+- متاح للحجوزات المكتملة فقط
+
+---
+
+## تشغيل المشروع محلياً
+
+### المتطلبات
+- Node.js 18+
+- حساب MongoDB Atlas
+- Gmail App Password
+
+### الباكاند
 ```bash
-# Install dependencies
+cd backend
 npm install
+cp .env.example .env
+# عدّل .env بمعلوماتك
+npm run dev
+```
 
-# Start development server
+### الفرونتاند
+```bash
+npm install
 npm start
 ```
 
-## Demo Accounts
+---
 
-| Email | Password | Role |
-|-------|----------|------|
-| admin@stay.com | admin123 | Super Admin → redirects to /dashboard |
-| manager@stay.com | manager123 | Manager → redirects to /home |
+## متغيرات البيئة (backend/.env)
 
-Or sign up for a new account (redirects to /home).
-
-## Project Structure
-
-```
-src/
-├── App.tsx                  # All routes + role-based protection
-├── index.tsx                # Entry point
-├── components/
-│   └── Layout.tsx            # Shared sidebar + topbar used by every inner page
-├── store/
-│   └── authStore.ts         # Zustand auth (login, signup, persist)
-├── routes/
-│   └── ProtectedRoute.tsx   # Role-aware route guard
-└── pages/
-    ├── LoginPage.tsx
-    ├── SignupPage.tsx
-    ├── HomePage.tsx          # Home (own navbar, hero, stats, hotels, footer)
-    ├── DashboardPage.tsx     # Super Admin only
-    ├── hotels/HotelsPage.tsx
-    ├── bookings/BookingsPage.tsx
-    ├── customers/CustomersPage.tsx
-    ├── analytics/AnalyticsPage.tsx     # Super Admin only — charts via Recharts
-    ├── rooms/RoomsPage.tsx
-    ├── revenue/RevenuePage.tsx          # Super Admin only
-    ├── settings/SettingsPage.tsx
-    ├── notifications/NotificationsPage.tsx
-    └── profile/ProfilePage.tsx
+```env
+PORT=5000
+CLIENT_URL=http://localhost:3000
+JWT_SECRET=your_secret_key
+OTP_EXPIRY_MINUTES=10
+MAIL_USER=your_gmail@gmail.com
+MAIL_PASS=your_app_password
+MAIL_FROM_NAME=ضيافة - Dhiyafa
+MONGODB_URI=mongodb+srv://...
 ```
 
-## Navigation Map
+---
 
-Every icon and card is wired to a real route:
+## النشر
 
-- **Hamburger / Menu icon** → opens the sidebar
-- **Logo** → `/home`
-- **Sidebar nav items** → Dashboard*, Hotels, Bookings, Customers, Analytics*, Settings (*Super Admin only)
-- **Bell icon** → `/notifications`
-- **User avatar (top-right)** → `/profile`
-- **User card (sidebar bottom)** → `/profile`
-- **Logout** → clears session → `/login`
-- **Home page Quick Access cards** → Hotels, Bookings, Customers, Analytics*, Room Types, Revenue*
-- **Featured Hotels** → `/hotels`
-- **"View Bookings" CTA** → `/bookings`
-- **"See Analytics" CTA** → `/analytics`*
-
-
-
-## Features
-
-- **Role-based routing** — superadmin sees Dashboard + Analytics + Revenue; regular users see Home only
-- **Persistent auth** — login state saved to localStorage via Zustand persist
-- **Live search** — filters Quick Access cards in real time
-- **Hotel images** — pulls from Unsplash CDN
-- **Responsive sidebar** — collapses on mobile with overlay
-- **Notifications badge** — clears on click
-
-## Tech Stack
-
-- React 18 + TypeScript
-- React Router v6
-- Zustand (state + persistence)
-- Lucide React (icons)
-- Inter font (Google Fonts)
+- **الفرونتاند:** Vercel
+- **الباكاند:** Railway
+- **قاعدة البيانات:** MongoDB Atlas
