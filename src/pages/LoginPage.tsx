@@ -34,10 +34,11 @@ export default function LoginPage() {
           ? '/dashboard'
           : role === 'support'
             ? '/support'
-            : '/home';
-              : '/home';
+            : '/SupportChatPage';
+              
       navigate(to, { replace: true });
-    } else {
+    } 
+    else {
       setError(result.message);
       setShowSignupHint(true);
     }
