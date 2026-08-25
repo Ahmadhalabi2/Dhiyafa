@@ -8,12 +8,15 @@
 
 const router = require('express').Router();
 const jwt    = require('jsonwebtoken');
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require('nodemailer');
 
-const FROM = process.env.MAIL_FROM
-  ? `${process.env.MAIL_FROM_NAME || 'ضيافة'} <${process.env.MAIL_FROM}>`
-  : 'ضيافة - Dhiyafa <onboarding@resend.dev>';
+const transporter = nodemailer.createTransport({
+  host:   'smtp.gmail.com',
+  port:   587,
+  secure: false,
+  auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+  tls: { rejectUnauthorized: false },
+});
 
 function requireAuth(req, res, next) {
   const h = req.headers.authorization;
@@ -219,14 +222,13 @@ router.post('/send-confirmation', requireAuth, async (req, res) => {
 
   try {
     const html = buildConfirmationHtml(booking);
-    const { error } = await resend.emails.send({
-      from:    FROM,
+    await transporter.sendMail({
+      from:    `"${process.env.MAIL_FROM_NAME || 'ضيافة'}" <${process.env.MAIL_USER}>`,
       to:      userEmail,
       subject: `✅ تأكيد حجزك في ${booking.hotelName} — ${booking.id}`,
       html,
       text: `تأكيد حجزك في ضيافة\nرقم الحجز: ${booking.id}\nالفندق: ${booking.hotelName}\nالوصول: ${booking.checkIn}\nالمغادرة: ${booking.checkOut}\nالمبلغ: $${booking.amount}`,
     });
-    if (error) throw new Error(error.message);
     console.log(`[Booking] Confirmation sent to ${userEmail} for ${booking.id}`);
     return res.json({ success: true, message: 'تم إرسال تأكيد الحجز بنجاح.' });
   } catch (err) {
