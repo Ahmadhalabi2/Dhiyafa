@@ -32,11 +32,15 @@ export default function SupportChatPage() {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const handleBack = async () => {
+  // ── زر الرجوع: يرجع خطوة لوراء للأدمن، ويسجل خروج للدعم ─────────────
+  const handleBack = () => {
     if (isAdminViewer) {
-      window.history.length > 2 ? navigate(-1) : navigate('/dashboard');
+      // الأدمن: يرجع خطوة للصفحة السابقة بدون تسجيل خروج
+      navigate(-1);
     } else {
-      window.history.length > 2 ? navigate(-1) : navigate('/home');
+      // الدعم أو المستخدم: يسجل خروج وينتقل لصفحة الدخول
+      logout();
+      navigate('/login');
     }
   };
 
@@ -208,7 +212,7 @@ export default function SupportChatPage() {
               onClick={handleBack}
               className="btn-back-lux support-back-btn"
               style={S.backBtn}
-              title={isSupportAgent ? 'تسجيل الخروج والرجوع' : 'رجوع'}
+              title={isAdminViewer ? "الرجوع للصفحة السابقة" : "تسجيل الخروج والرجوع لصفحة الدخول"}
             >
               <ArrowRight size={20} />
             </button>
