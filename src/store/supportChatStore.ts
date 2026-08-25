@@ -8,7 +8,8 @@
 
 import { create } from 'zustand';
 
-const API = 'http://localhost:5000/api/support';
+import { BACKEND_URL } from '../config';
+const API = `${BACKEND_URL}/api/support`;
 const getToken = () => localStorage.getItem('dhiyafa_token') ?? '';
 
 export type SupportRole = 'user' | 'support' | 'superadmin';

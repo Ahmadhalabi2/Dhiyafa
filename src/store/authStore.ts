@@ -12,9 +12,11 @@ export interface User {
   avatar?: string | null;
 }
 
-const API        = 'http://localhost:5000/api/auth';
-const UPLOAD_API = 'http://localhost:5000/api/upload';
-const BACKEND    = 'http://localhost:5000';
+import { BACKEND_URL } from '../config';
+
+const API        = `${BACKEND_URL}/api/auth`;
+const UPLOAD_API = `${BACKEND_URL}/api/upload`;
+const BACKEND    = BACKEND_URL;
 
 interface AuthState {
   currentUser: Omit<User, 'password'> | null;

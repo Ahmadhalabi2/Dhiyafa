@@ -5,7 +5,8 @@ import { useBookingsStore, type Booking } from '../../store/bookingsStore';
 import { useAuthStore } from '../../store/authStore';
 import { useNotifEventsStore } from '../../store/notifEvents';
 
-const BACKEND = 'http://localhost:5000';
+import { BACKEND_URL } from '../../config';
+const BACKEND = BACKEND_URL;
 const OTP_DOMAINS = ['gmail.com','yahoo.com','yahoo.co.uk','outlook.com','hotmail.com','live.com'];
 function isOtpEmail(email = '') { return OTP_DOMAINS.includes(email.split('@')[1]?.toLowerCase() ?? ''); }
 

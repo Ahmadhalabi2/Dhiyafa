@@ -6,7 +6,8 @@ import {
   Mail, ArrowRight, RotateCcw, UserPlus,
 } from 'lucide-react';
 
-const API = 'http://localhost:5000/api/auth';
+import { BACKEND_URL } from '../config';
+const API = `${BACKEND_URL}/api/auth`;
 
 // ─── أنواع إيميلات OTP المعروفة ─────────────────────────────────────────────
 const OTP_PROVIDERS = [

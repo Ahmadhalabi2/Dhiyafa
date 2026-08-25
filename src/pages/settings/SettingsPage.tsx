@@ -17,7 +17,8 @@ const ROLE_LABEL: Record<string, string> = {
   user:       'عميل',
 };
 
-const API = 'http://localhost:5000/api/auth';
+import { BACKEND_URL } from '../../config';
+const API = `${BACKEND_URL}/api/auth`;
 
 export default function SettingsPage() {
   const { currentUser, loginWithToken } = useAuthStore();

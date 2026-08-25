@@ -9,7 +9,8 @@
 
 import { create } from 'zustand';
 
-const API = 'http://localhost:5000/api/notifications';
+import { BACKEND_URL } from '../config';
+const API = `${BACKEND_URL}/api/notifications`;
 
 const getToken = () => localStorage.getItem('dhiyafa_token') ?? '';
 
