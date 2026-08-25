@@ -33,13 +33,10 @@ export default function SupportChatPage() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleBack = async () => {
-    if (isSupportAgent) {
-      if (logout) await logout();
-      navigate('/login', { replace: true });
-    } else if (isAdminViewer) {
+    if (isAdminViewer) {
       window.history.length > 2 ? navigate(-1) : navigate('/dashboard');
     } else {
-      window.history.length > 2 ? navigate(-1) : navigate('/');
+      window.history.length > 2 ? navigate(-1) : navigate('/home');
     }
   };
 
