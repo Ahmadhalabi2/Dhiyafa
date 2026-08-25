@@ -2,7 +2,7 @@
   "name": "booking-admin-dashboard",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://Ahmadhalabi2.github.io/booking-admin-dashboard",
+  "homepage": "/",
   "dependencies": {
     "@tanstack/react-query": "^5.25.0",
     "@types/react": "^18.2.0",
