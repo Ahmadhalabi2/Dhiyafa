@@ -61,14 +61,26 @@ router.post('/send-otp', sendOtpLimiter, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
     const expiryMin = parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10;
 
+    // حفظ الـ OTP في الذاكرة
     saveOtp(email, { otp, name: name.trim(), passwordHash });
-    await sendOtpEmail(email, name.trim(), otp, expiryMin);
-    console.log(`[OTP] Sent to ${email} — code: ${otp}`);
 
-    return res.json({ success: true, message: `تم إرسال رمز التحقق إلى ${email}.` });
+    // محاولة إرسال البريد الإلكتروني مع التقاط أخطاء الـ Timeout
+    try {
+      await sendOtpEmail(email, name.trim(), otp, expiryMin);
+      console.log(`[OTP] Sent to ${email} — code: ${otp}`);
+      return res.json({ success: true, message: `تم إرسال رمز التحقق إلى ${email}.` });
+    } catch (mailErr) {
+      console.error('[send-otp SMTP Error]:', mailErr.message);
+      return res.status(504).json({
+        success: false,
+        message: 'فشل الاتصال بخادم البريد الإلكتروني (Timeout). يرجى التأكد من إعدادات MAIL_USER و MAIL_PASS في Railway.',
+        detail: mailErr.message,
+      });
+    }
+
   } catch (err) {
-    console.error('[send-otp]', err.message);
-    return res.status(500).json({ success: false, message: 'فشل إرسال الإيميل.', detail: err.message });
+    console.error('[send-otp Internal Error]:', err.message);
+    return res.status(500).json({ success: false, message: 'خطأ داخلي في الخادم.', detail: err.message });
   }
 });
 
