@@ -33,9 +33,8 @@ export default function LoginPage() {
         role === 'superadmin'
           ? '/dashboard'
           : role === 'support'
-            ? '/support-chat'
-            : role === 'manager'
-              ? '/manager/bookings'
+            ? '/support'
+            : '/home';
               : '/home';
       navigate(to, { replace: true });
     } else {
