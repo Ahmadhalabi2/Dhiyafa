@@ -1,0 +1,35 @@
+# ── Dependencies ──────────────────────────────────────
+node_modules/
+backend/node_modules/
+
+# ── Environment variables (لا ترفع هاد أبداً) ─────────
+.env
+backend/.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# ── Build output ──────────────────────────────────────
+build/
+dist/
+
+# ── Uploads (صور المستخدمين) ───────────────────────────
+backend/uploads/
+
+# ── Database files ────────────────────────────────────
+backend/src/db/data/
+
+# ── Logs ──────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────────────
+.vscode/
+.idea/

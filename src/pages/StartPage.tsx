@@ -1,0 +1,491 @@
+import { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { useAuthStore } from '../store/authStore';
+import { useHotelsStore } from '../store/hotelsStore';
+import { HOTELS } from '../data/hotels';
+import { SYRIA_PROVINCES } from '../data/syria';
+import { ArrowLeft, CalendarCheck, Shield, Wallet, Clock } from 'lucide-react';
+
+export default function StartPage() {
+  const navigate = useNavigate();
+  const { currentUser } = useAuthStore();
+  const { initFrom, hotels } = useHotelsStore();
+
+  useEffect(() => {
+    initFrom(
+      HOTELS.map((h) => ({
+        ...h,
+        amenities: h.amenities,
+      }))
+    );
+  }, [initFrom]);
+
+  const activeHotelsCount = useMemo(() => hotels.filter((h) => h.status === 'active').length, [hotels]);
+
+  const isLoggedIn = !!currentUser;
+  const isAdmin = currentUser?.role === 'superadmin';
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    navigate(isAdmin ? '/home' : '/home', { replace: true });
+  }, [isLoggedIn, isAdmin, navigate]);
+
+  return (
+    <Layout minimal>
+      {/* Premium Cinematic Stylesheets, Keyframes & Ultra Responsive Overrides */}
+      <style>{`
+        @keyframes liquidMeshOne {
+          0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+          33% { transform: translate(40px, -60px) scale(1.2) rotate(120deg); }
+          66% { transform: translate(-30px, 20px) scale(0.8) rotate(240deg); }
+          100% { transform: translate(0px, 0px) scale(1) rotate(360deg); }
+        }
+        @keyframes liquidMeshTwo {
+          0% { transform: translate(0px, 0px) scale(1.1) rotate(360deg); }
+          50% { transform: translate(-50px, 40px) scale(0.9) rotate(180deg); }
+          100% { transform: translate(0px, 0px) scale(1.1) rotate(0deg); }
+        }
+        @keyframes pulsePipeline {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 0% 200%; }
+        }
+        @keyframes textReveal {
+          from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+          to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes cardReveal {
+          from { opacity: 0; transform: scale(0.96) translateY(20px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-fade-in {
+          animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .delay-1 { animation-delay: 0.15s; opacity: 0; }
+        .delay-2 { animation-delay: 0.3s; opacity: 0; }
+        .delay-3 { animation-delay: 0.45s; opacity: 0; }
+
+        .premium-glass-card {
+          animation: cardReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          transition: cubic-bezier(0.16, 1, 0.3, 1) 0.5s !important;
+        }
+        .premium-glass-card:hover {
+          transform: translateY(-8px) scale(1.005) !important;
+          box-shadow: 0 40px 80px rgba(14, 92, 74, 0.1), 
+                      0 0 0 1px rgba(14, 92, 74, 0.25) !important;
+        }
+
+        .interactive-step {
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .interactive-step:hover {
+          background: rgba(255, 255, 255, 0.85) !important;
+          box-shadow: 0 12px 24px rgba(28, 43, 39, 0.05) !important;
+          transform: translateX(-8px);
+        }
+
+        .btn-luxury-primary {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .btn-luxury-primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 20px 40px rgba(10, 68, 55, 0.4) !important;
+          letter-spacing: 0.5px;
+        }
+        .btn-luxury-primary::after {
+          content: '';
+          position: absolute;
+          top: -50%; left: -60%; width: 30%; height: 200%;
+          background: rgba(255, 255, 255, 0.25);
+          transform: rotate(30deg);
+          transition: none;
+        }
+        .btn-luxury-primary:hover::after {
+          left: 150%;
+          transition: all 0.8s ease-in-out;
+        }
+
+        .btn-luxury-secondary {
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .btn-luxury-secondary:hover {
+          background: #FAF6EC !important;
+          border-color: #C9A227 !important;
+          transform: translateY(-3px);
+          color: #1C2B27 !important;
+        }
+
+        .stat-box {
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .stat-box:hover {
+          transform: translateY(-6px);
+          background: #fff !important;
+          border-color: rgba(14, 92, 74, 0.25) !important;
+          box-shadow: 0 15px 30px rgba(28, 43, 39, 0.04) !important;
+        }
+
+        /* Responsive Breakpoints & Media Queries */
+        .hero-container {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 40px;
+          align-items: center;
+          width: 100%;
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 20px;
+          z-index: 1;
+        }
+
+        .hero-title {
+          margin: 0 0 20px 0;
+          font-size: 32px;
+          line-height: 1.3;
+          color: #1C2B27;
+          font-weight: 700;
+          font-family: 'Amiri', serif;
+        }
+
+        .hero-stats {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 40px;
+        }
+
+        @media (min-width: 640px) {
+          .hero-stats {
+            flex-direction: row;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .hero-container {
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 60px;
+            padding: 0 24px;
+          }
+          .hero-title {
+            font-size: 48px;
+            line-height: 1.25;
+          }
+          .hero-stats {
+            margin-top: 56px;
+          }
+        }
+      `}</style>
+
+      <div style={S.wrap}>
+        {/* Living Ambient Lighting Canvas */}
+        <div style={S.ambientContainer}>
+          <div style={S.ambientBlobOne} />
+          <div style={S.ambientBlobTwo} />
+        </div>
+
+        <div className="hero-container">
+          {/* Right-To-Left Left Column: High-Impact Typography & Controls */}
+          <div style={S.heroLeft}>
+            <p className="animate-fade-in" style={S.eyebrow}>
+              ضِيافة — المنصة النخبوية لإدارة الإقامات الفاخرة والحجوزات الآمنة
+            </p>
+            <h1 className="animate-fade-in delay-1 hero-title">
+              اختر فندقك المفضّل...<br />
+              <span style={S.titleAccent}>ودع عناء التخطيط علينا</span>
+            </h1>
+            <p className="animate-fade-in delay-2" style={S.sub}>
+              اكتشف أفقاً جديداً لتنظيم رحلاتك الفاخرة. اختر وجهتك الاستثنائية، قدم طلبك بلمسة، وتولى متابعة الحجز والمسارات المالية المتكاملة بكل أريحية وأمان من نافذة موحدة صممت لرفاهيتك.
+            </p>
+            
+            <div className="animate-fade-in delay-3" style={S.ctas}>
+              <button className="btn-luxury-primary" style={S.primary} onClick={() => navigate('/signup')}>
+                أنشئ حسابك الآن 
+                <ArrowLeft size={20} style={{ marginRight: 10 }} />
+              </button>
+              <button className="btn-luxury-secondary" style={S.secondary} onClick={() => navigate('/login')}>
+                تسجيل الدخول
+              </button>
+            </div>
+
+            <div className="animate-fade-in delay-3 hero-stats">
+              <div className="stat-box" style={S.stat}>
+                <span style={S.statLabel}>منتجعات وفنادق متاحة</span>
+                <strong style={S.statNumber}>{activeHotelsCount}</strong>
+              </div>
+              <div className="stat-box" style={S.stat}>
+                <span style={S.statLabel}>وجهات سورية</span>
+                <strong style={S.statNumber}>{SYRIA_PROVINCES.length}</strong>
+              </div>
+              <div className="stat-box" style={S.stat}>
+                <span style={S.statLabel}>بوابات تأكيد فورية</span>
+                <strong style={S.statNumber}>1</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Right-To-Left Right Column: Immersive Flow Dashboard */}
+          <div style={S.heroRight}>
+            <div className="premium-glass-card" style={S.glassCard}>
+              
+              {/* Dynamic Glowing Pipeline Connector */}
+              <div style={S.connectorPipeline} />
+
+              {/* Step 1 */}
+              <div className="interactive-step" style={S.stepRow}>
+                <div style={{...S.iconWrapper, background: 'linear-gradient(135deg, #E1EEE7 0%, #BFE0D2 100%)'}}>
+                  <CalendarCheck size={22} style={{ color: '#0E5C4A' }} />
+                </div>
+                <div style={S.stepContent}>
+                  <strong style={S.stepTitle}>01 / حدد وجهتك المرجوة</strong>
+                  <div style={S.small}>تصفح تشكيلة منسقة من الفنادق العصرية وقدم طلبك بلمحة واحدة.</div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="interactive-step" style={S.stepRow}>
+                <div style={{...S.iconWrapper, background: 'linear-gradient(135deg, #F6EBCB 0%, #EBD79D 100%)'}}>
+                  <Shield size={22} style={{ color: '#9C7825' }} />
+                </div>
+                <div style={S.stepContent}>
+                  <strong style={S.stepTitle}>02 / المصادقة الذكية الفورية</strong>
+                  <div style={S.small}>يتولى النظام وفريق الإشراف مراجعة حجزك وتثبيته لضمان الخصوصية.</div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="interactive-step" style={S.stepRow}>
+                <div style={{...S.iconWrapper, background: 'linear-gradient(135deg, #FAEAE2 0%, #F0C6B2 100%)'}}>
+                  <Wallet size={22} style={{ color: '#BD5B3E' }} />
+                </div>
+                <div style={S.stepContent}>
+                  <strong style={S.stepTitle}>03 / قنوات سداد مشفرة</strong>
+                  <div style={S.small}>فور قبول الطلب، يمكنك تسوية مستحقاتك عبر بروتوكولات دفع بالغة الأمان.</div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="interactive-step" style={S.stepRow}>
+                <div style={{...S.iconWrapper, background: 'linear-gradient(135deg, #F3EEDD 0%, #E5DFC8 100%)'}}>
+                  <Clock size={22} style={{ color: '#52655F' }} />
+                </div>
+                <div style={S.stepContent}>
+                  <strong style={S.stepTitle}>04 / إصدار وثيقة الحجز النهائية</strong>
+                  <div style={S.small}>استلم تصريح إقامتك الرقمي الشامل، لتنطلق في رحلتك بمنتهى الطمأنينة.</div>
+                </div>
+              </div>
+
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  wrap: { 
+    minHeight: '85vh', 
+    direction: 'rtl',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    overflow: 'hidden',
+    padding: '40px 0',
+    background: '#FAF6EC',
+    fontFamily: "'Tajawal', sans-serif"
+  },
+  ambientContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    zIndex: 0,
+    pointerEvents: 'none'
+  },
+  ambientBlobOne: {
+    position: 'absolute',
+    width: 'min(600px, 90vw)',
+    height: 'min(600px, 90vw)',
+    background: 'radial-gradient(circle, rgba(14,92,74,0.16) 0%, rgba(255,255,255,0) 70%)',
+    top: '-10%',
+    right: '-5%',
+    filter: 'blur(60px)',
+    animation: 'liquidMeshOne 25s ease-in-out infinite'
+  },
+  ambientBlobTwo: {
+    position: 'absolute',
+    width: 'min(500px, 80vw)',
+    height: 'min(500px, 80vw)',
+    background: 'radial-gradient(circle, rgba(198,154,58,0.14) 0%, rgba(255,255,255,0) 70%)',
+    bottom: '5%',
+    left: '5%',
+    filter: 'blur(50px)',
+    animation: 'liquidMeshTwo 20s ease-in-out infinite'
+  },
+  heroLeft: { 
+    textAlign: 'right',
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%'
+  },
+  heroRight: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: 20,
+    position: 'relative',
+    width: '100%'
+  },
+  eyebrow: { 
+    fontSize: '14px', 
+    fontWeight: 700, 
+    color: '#0A4437', 
+    margin: '0 0 16px 0',
+    textTransform: 'uppercase',
+    letterSpacing: '0.8px'
+  },
+  titleAccent: {
+    background: 'linear-gradient(135deg, #0A4437 0%, #C69A3A 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  },
+  sub: { 
+    margin: 0, 
+    color: '#52655F', 
+    fontSize: '16px', 
+    lineHeight: 1.9, 
+    maxWidth: '600px' 
+  },
+  ctas: { 
+    display: 'flex', 
+    gap: 14, 
+    marginTop: 36, 
+    flexWrap: 'wrap' 
+  },
+  primary: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    gap: 8, 
+    padding: '16px 32px', 
+    background: 'linear-gradient(135deg, #0E5C4A 0%, #0A4437 100%)', 
+    color: '#fff', 
+    border: 'none', 
+    borderRadius: '16px', 
+    cursor: 'pointer', 
+    fontSize: '16px',
+    fontWeight: 700,
+    boxShadow: '0 10px 25px rgba(10, 68, 55, 0.28)',
+    fontFamily: "'Tajawal', sans-serif",
+    flex: '1 1 auto',
+    minWidth: '200px'
+  },
+  secondary: { 
+    padding: '16px 32px', 
+    background: '#fff', 
+    border: '1px solid #E5DFC8', 
+    borderRadius: '16px', 
+    cursor: 'pointer', 
+    fontSize: '16px',
+    fontWeight: 700, 
+    color: '#52655F',
+    boxShadow: '0 4px 10px rgba(28,43,39,0.02)',
+    fontFamily: "'Tajawal', sans-serif",
+    flex: '1 1 auto',
+    minWidth: '200px'
+  },
+  stat: { 
+    flex: 1,
+    padding: '20px 24px', 
+    background: 'rgba(255, 255, 255, 0.7)', 
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid rgba(229, 223, 200, 0.8)', 
+    borderRadius: '20px', 
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    boxShadow: '0 4px 20px rgba(28,43,39,0.015)'
+  },
+  statLabel: {
+    fontSize: '13px',
+    color: '#52655F',
+    fontWeight: 600
+  },
+  statNumber: {
+    fontSize: '30px',
+    color: '#1C2B27',
+    fontWeight: 900
+  },
+  glassCard: { 
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.45) 100%)', 
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    border: '1px solid rgba(255, 255, 255, 0.7)', 
+    borderRadius: '32px', 
+    padding: '32px 24px', 
+    boxShadow: '0 30px 60px rgba(28, 43, 39, 0.05)', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: 20,
+    position: 'relative'
+  },
+  connectorPipeline: {
+    position: 'absolute',
+    right: '43px',
+    top: '52px',
+    bottom: '52px',
+    width: '3px',
+    background: 'linear-gradient(to bottom, #0E5C4A, #C69A3A, #BD5B3E, #52655F)',
+    backgroundSize: '100% 200%',
+    opacity: 0.4,
+    zIndex: 0,
+    animation: 'pulsePipeline 6s linear infinite'
+  },
+  stepRow: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: 16,
+    zIndex: 1,
+    padding: '12px 14px',
+    borderRadius: '20px',
+    background: 'rgba(255, 255, 255, 0.5)',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
+  },
+  iconWrapper: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 6px 12px rgba(28,43,39,0.03)',
+    flexShrink: 0
+  },
+  stepContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4
+  },
+  stepTitle: {
+    fontSize: '15px',
+    color: '#1C2B27',
+    fontWeight: 800
+  },
+  small: { 
+    fontSize: '12px', 
+    color: '#52655F', 
+    lineHeight: 1.6
+  },
+  note: { 
+    margin: 0, 
+    fontSize: '12px', 
+    color: '#93A29B',
+    paddingRight: 12,
+    textAlign: 'right'
+  },
+};
