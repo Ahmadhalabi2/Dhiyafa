@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const jwt    = require('jsonwebtoken');
-const Notification = require('../models/Notification');
+const { createFileStore } = require('../db/fileStore');
+
+const notifsStore = createFileStore('notifications', []);
 
 function requireAuth(req, res, next) {
   const h = req.headers.authorization;
@@ -15,37 +17,48 @@ function buildFilter(user) {
   return f;
 }
 
-// GET /api/notifications
-router.get('/', requireAuth, async (req, res) => {
-  const notifs = await Notification.find(buildFilter(req.user)).sort({ createdAt: -1 }).lean();
-  const unreadCount = notifs.filter((n) => n.unread).length;
-  return res.json({ success: true, notifications: notifs.map((n) => ({ ...n, id: n._id.toString() })), unreadCount });
+router.get('/', requireAuth, (req, res) => {
+  const all   = notifsStore.get();
+  const mine  = all.filter((n) => {
+    if (n.targetRole !== req.user.role) return false;
+    if (n.targetUserId) return n.targetUserId === req.user.id;
+    return true;
+  });
+  return res.json({ success: true, notifications: mine.map((n) => ({ ...n, id: n.id })), unreadCount: mine.filter((n) => n.unread).length });
 });
 
-// POST /api/notifications
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, (req, res) => {
   const { type, bookingId, createdByUserId, createdByName, targetRole, targetUserId, title, desc } = req.body;
   if (!type || !targetRole || !title || !desc) return res.status(400).json({ success: false, message: 'حقول ناقصة.' });
-
-  const notif = await Notification.create({ type, bookingId: bookingId || null, createdByUserId: createdByUserId || req.user.id, createdByName: createdByName || req.user.name, targetRole, targetUserId: targetUserId || null, title, desc });
-  return res.status(201).json({ success: true, notification: { ...notif.toObject(), id: notif._id.toString() } });
+  const notif = {
+    id: `EV-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,
+    type, bookingId: bookingId || null,
+    createdByUserId: createdByUserId || req.user.id, createdByName: createdByName || req.user.name,
+    targetRole, targetUserId: targetUserId || null, title, desc,
+    time: new Date().toISOString(), unread: true,
+  };
+  notifsStore.update((all) => [notif, ...all]);
+  return res.status(201).json({ success: true, notification: notif });
 });
 
-// PATCH /api/notifications/read-all
-router.patch('/read-all', requireAuth, async (req, res) => {
-  await Notification.updateMany(buildFilter(req.user), { unread: false });
+router.patch('/read-all', requireAuth, (req, res) => {
+  const all  = notifsStore.get();
+  const ids  = all.filter((n) => {
+    if (n.targetRole !== req.user.role) return false;
+    if (n.targetUserId) return n.targetUserId === req.user.id;
+    return true;
+  }).map((n) => n.id);
+  notifsStore.update((all) => all.map((n) => ids.includes(n.id) ? { ...n, unread: false } : n));
   return res.json({ success: true });
 });
 
-// PATCH /api/notifications/:id/read
-router.patch('/:id/read', requireAuth, async (req, res) => {
-  await Notification.findByIdAndUpdate(req.params.id, { unread: false });
+router.patch('/:id/read', requireAuth, (req, res) => {
+  notifsStore.update((all) => all.map((n) => n.id === req.params.id ? { ...n, unread: false } : n));
   return res.json({ success: true });
 });
 
-// DELETE /api/notifications/:id
-router.delete('/:id', requireAuth, async (req, res) => {
-  await Notification.findByIdAndDelete(req.params.id);
+router.delete('/:id', requireAuth, (req, res) => {
+  notifsStore.update((all) => all.filter((n) => n.id !== req.params.id));
   return res.json({ success: true });
 });
 

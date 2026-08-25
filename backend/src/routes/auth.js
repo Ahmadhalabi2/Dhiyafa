@@ -1,5 +1,5 @@
 /**
- * routes/auth.js — MongoDB version
+ * routes/auth.js — fileStore version (local)
  */
 
 const router = require('express').Router();
@@ -9,22 +9,29 @@ const jwt    = require('jsonwebtoken');
 const { saveOtp, verifyOtp }               = require('../services/otpStore');
 const { sendOtpEmail }                     = require('../services/emailService');
 const { sendOtpLimiter, verifyOtpLimiter } = require('../middleware/rateLimiter');
-const User = require('../models/User');
+const { createFileStore }                  = require('../db/fileStore');
 
-async function seedDemoUsers() {
-  const demos = [
-    { name: 'Super Admin',   email: 'admin@stay.com',   password: 'admin123',   role: 'superadmin' },
-    { name: 'Support Agent', email: 'support@stay.com', password: 'support123', role: 'support'    },
-    { name: 'Ahmad Alhalabi',email: 'user@stay.com',    password: 'user123',    role: 'user'       },
-  ];
-  for (const d of demos) {
-    const exists = await User.findOne({ email: d.email });
-    if (!exists) {
-      await User.create({ name: d.name, email: d.email, passwordHash: await bcrypt.hash(d.password, 10), role: d.role });
+// ── Users DB ────────────────────────────────────────────────────────────────
+const DEMO_USERS = [
+  { id: '1', name: 'Super Admin',   email: 'admin@stay.com',   passwordHash: bcrypt.hashSync('admin123',   10), role: 'superadmin', createdAt: Date.now() },
+  { id: '2', name: 'Support Agent', email: 'support@stay.com', passwordHash: bcrypt.hashSync('support123', 10), role: 'support',    createdAt: Date.now() },
+  { id: '3', name: 'Ahmad Alhalabi',email: 'user@stay.com',    passwordHash: bcrypt.hashSync('user123',    10), role: 'user',       createdAt: Date.now() },
+];
+
+const usersStore = createFileStore('users', DEMO_USERS);
+
+(function ensureDemoUsers() {
+  const users = usersStore.get();
+  let changed = false;
+  for (const demo of DEMO_USERS) {
+    if (!users.some((u) => u.email.toLowerCase() === demo.email.toLowerCase())) {
+      users.push(demo); changed = true;
     }
   }
-}
+  if (changed) usersStore.set(users);
+})();
 
+// ── Middleware ───────────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const h = req.headers.authorization;
   if (!h?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'غير مصرّح.' });
@@ -36,14 +43,14 @@ const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 function signToken(user) {
   return jwt.sign(
-    { id: user._id.toString(), email: user.email, name: user.name, role: user.role },
+    { id: user.id, email: user.email, name: user.name, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 }
 
 function safeUser(u) {
-  return { id: u._id.toString(), name: u.name, email: u.email, role: u.role, avatar: u.avatar ?? null };
+  return { id: u.id, name: u.name, email: u.email, role: u.role, avatar: u.avatar ?? null };
 }
 
 // POST /api/auth/send-otp
@@ -54,33 +61,21 @@ router.post('/send-otp', sendOtpLimiter, async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: 'صيغة الإيميل غير صحيحة.' });
     if (password.length < 6) return res.status(400).json({ success: false, message: 'كلمة المرور 6 أحرف على الأقل.' });
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) return res.status(409).json({ success: false, message: 'هذا الإيميل مسجل مسبقاً.' });
+    if (usersStore.get().find((u) => u.email.toLowerCase() === email.toLowerCase()))
+      return res.status(409).json({ success: false, message: 'هذا الإيميل مسجل مسبقاً.' });
 
     const otp = generateOtp();
     const passwordHash = await bcrypt.hash(password, 12);
     const expiryMin = parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10;
 
-    // حفظ الـ OTP في الذاكرة
     saveOtp(email, { otp, name: name.trim(), passwordHash });
+    await sendOtpEmail(email, name.trim(), otp, expiryMin);
+    console.log(`[OTP] Sent to ${email} — code: ${otp}`);
 
-    // محاولة إرسال البريد الإلكتروني مع التقاط أخطاء الـ Timeout
-    try {
-      await sendOtpEmail(email, name.trim(), otp, expiryMin);
-      console.log(`[OTP] Sent to ${email} — code: ${otp}`);
-      return res.json({ success: true, message: `تم إرسال رمز التحقق إلى ${email}.` });
-    } catch (mailErr) {
-      console.error('[send-otp SMTP Error]:', mailErr.message);
-      return res.status(504).json({
-        success: false,
-        message: 'فشل الاتصال بخادم البريد الإلكتروني (Timeout). يرجى التأكد من إعدادات MAIL_USER و MAIL_PASS في Railway.',
-        detail: mailErr.message,
-      });
-    }
-
+    return res.json({ success: true, message: `تم إرسال رمز التحقق إلى ${email}.` });
   } catch (err) {
-    console.error('[send-otp Internal Error]:', err.message);
-    return res.status(500).json({ success: false, message: 'خطأ داخلي في الخادم.', detail: err.message });
+    console.error('[send-otp]', err.message);
+    return res.status(500).json({ success: false, message: 'فشل إرسال الإيميل. تحقق من إعدادات .env', detail: err.message });
   }
 });
 
@@ -97,8 +92,9 @@ router.post('/verify-otp', verifyOtpLimiter, async (req, res) => {
     }
 
     const { name, passwordHash } = result.record;
-    const newUser = await User.create({ name, email: email.toLowerCase(), passwordHash, role: 'user' });
-    console.log(`[Auth] Registered via OTP: ${email}`);
+    const newUser = { id: Date.now().toString(), name, email: email.toLowerCase(), passwordHash, role: 'user', createdAt: Date.now() };
+    usersStore.update((users) => [...users, newUser]);
+    console.log(`[Auth] Registered: ${email}`);
 
     return res.status(201).json({ success: true, message: 'تم إنشاء الحساب!', token: signToken(newUser), user: safeUser(newUser) });
   } catch (err) {
@@ -112,14 +108,11 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: 'جميع الحقول مطلوبة.' });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: 'صيغة الإيميل غير صحيحة.' });
-    if (password.length < 6) return res.status(400).json({ success: false, message: 'كلمة المرور 6 أحرف على الأقل.' });
+    if (usersStore.get().find((u) => u.email.toLowerCase() === email.toLowerCase()))
+      return res.status(409).json({ success: false, message: 'هذا الإيميل مسجل مسبقاً.' });
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) return res.status(409).json({ success: false, message: 'هذا الإيميل مسجل مسبقاً.' });
-
-    const newUser = await User.create({ name: name.trim(), email: email.toLowerCase(), passwordHash: await bcrypt.hash(password, 12), role: 'user' });
-    console.log(`[Auth] Direct register: ${email}`);
+    const newUser = { id: Date.now().toString(), name: name.trim(), email: email.toLowerCase(), passwordHash: await bcrypt.hash(password, 12), role: 'user', createdAt: Date.now() };
+    usersStore.update((users) => [...users, newUser]);
 
     return res.status(201).json({ success: true, message: 'تم إنشاء الحساب!', token: signToken(newUser), user: safeUser(newUser) });
   } catch (err) {
@@ -129,10 +122,10 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/check-email
-router.post('/check-email', async (req, res) => {
+router.post('/check-email', (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: 'الإيميل مطلوب.' });
-  const taken = !!(await User.findOne({ email: email.toLowerCase() }));
+  const taken = usersStore.get().some((u) => u.email.toLowerCase() === email.toLowerCase());
   return res.json({ success: true, taken });
 });
 
@@ -142,7 +135,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ success: false, message: 'الإيميل وكلمة المرور مطلوبان.' });
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = usersStore.get().find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (!user || !(await bcrypt.compare(password, user.passwordHash)))
       return res.status(401).json({ success: false, message: 'الإيميل أو كلمة المرور غير صحيحة.' });
 
@@ -157,19 +150,20 @@ router.post('/login', async (req, res) => {
 router.patch('/profile', requireAuth, async (req, res) => {
   try {
     const { name, currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود.' });
+    const users = usersStore.get();
+    const idx   = users.findIndex((u) => u.id === req.user.id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'المستخدم غير موجود.' });
 
+    const user = { ...users[idx] };
     if (name?.trim()) user.name = name.trim();
-
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ success: false, message: 'كلمة السر الحالية مطلوبة.' });
       if (!(await bcrypt.compare(currentPassword, user.passwordHash))) return res.status(401).json({ success: false, message: 'كلمة السر الحالية غير صحيحة.' });
       if (newPassword.length < 6) return res.status(400).json({ success: false, message: 'كلمة السر الجديدة 6 أحرف على الأقل.' });
       user.passwordHash = await bcrypt.hash(newPassword, 12);
     }
-
-    await user.save();
+    users[idx] = user;
+    usersStore.set(users);
     return res.json({ success: true, message: 'تم التحديث.', token: signToken(user), user: safeUser(user) });
   } catch (err) {
     console.error('[patch-profile]', err.message);
@@ -178,11 +172,14 @@ router.patch('/profile', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/auth/account
-router.delete('/account', requireAuth, async (req, res) => {
+router.delete('/account', requireAuth, (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ success: false, message: 'هذا الإجراء للمستخدمين فقط.' });
-    await User.findByIdAndDelete(req.user.id);
-    console.log(`[Auth] Deleted: ${req.user.email}`);
+    const users = usersStore.get();
+    const idx   = users.findIndex((u) => u.id === req.user.id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'الحساب غير موجود.' });
+    users.splice(idx, 1);
+    usersStore.set(users);
     return res.json({ success: true, message: 'تم حذف الحساب.' });
   } catch (err) {
     console.error('[delete-account]', err.message);
@@ -190,22 +187,19 @@ router.delete('/account', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/auth/users — superadmin فقط
-router.get('/users', requireAuth, async (req, res) => {
-  if (req.user.role !== 'superadmin')
-    return res.status(403).json({ success: false, message: 'غير مصرّح.' });
-  const users = await User.find({}, '-passwordHash').lean();
-  return res.json({ success: true, users: users.map((u) => ({ ...u, id: u._id.toString(), createdAt: u.createdAt })) });
+// GET /api/auth/users
+router.get('/users', requireAuth, (req, res) => {
+  if (req.user.role !== 'superadmin') return res.status(403).json({ success: false, message: 'غير مصرّح.' });
+  const users = usersStore.get().map(({ passwordHash, ...u }) => u);
+  return res.json({ success: true, users });
 });
 
-// DELETE /api/auth/users/:id — superadmin فقط
-router.delete('/users/:id', requireAuth, async (req, res) => {
-  if (req.user.role !== 'superadmin')
-    return res.status(403).json({ success: false, message: 'غير مصرّح.' });
-  if (req.params.id === req.user.id)
-    return res.status(400).json({ success: false, message: 'لا يمكن حذف حسابك الخاص.' });
-  await User.findByIdAndDelete(req.params.id);
-  return res.json({ success: true, message: 'تم حذف المستخدم.' });
+// DELETE /api/auth/users/:id
+router.delete('/users/:id', requireAuth, (req, res) => {
+  if (req.user.role !== 'superadmin') return res.status(403).json({ success: false, message: 'غير مصرّح.' });
+  if (req.params.id === req.user.id) return res.status(400).json({ success: false, message: 'لا يمكن حذف حسابك.' });
+  usersStore.update((users) => users.filter((u) => u.id !== req.params.id));
+  return res.json({ success: true, message: 'تم الحذف.' });
 });
 
-module.exports = { router, seedDemoUsers };
+module.exports = { router, usersStore };

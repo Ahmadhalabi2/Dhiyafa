@@ -1,27 +1,9 @@
-/**
- * notifEvents.ts
- * ─────────────────────────────────────────────────────
- * إشعارات الحجوزات — مرتبطة بالباكاند عبر HTTP polling.
- * addEvent   → POST /api/notifications
- * fetchEvents → GET  /api/notifications  (يُستدعى دورياً)
- * ─────────────────────────────────────────────────────
- */
-
 import { create } from 'zustand';
-
-import { BACKEND_URL } from '../config';
-const API = `${BACKEND_URL}/api/notifications`;
-
-const getToken = () => localStorage.getItem('dhiyafa_token') ?? '';
+import { persist } from 'zustand/middleware';
 
 export type BookingEventType =
-  | 'booking_created'
-  | 'booking_accepted'
-  | 'booking_cancelled'
-  | 'booking_paid'
-  | 'booking_deleted'
-  | 'booking_completed'
-  | 'booking_rated';
+  | 'booking_created' | 'booking_accepted' | 'booking_cancelled'
+  | 'booking_paid' | 'booking_deleted' | 'booking_completed' | 'booking_rated';
 
 export type NotifTargetRole = 'superadmin' | 'manager' | 'user';
 
@@ -43,95 +25,55 @@ interface NotifEventsState {
   events: BookingEvent[];
   unreadCount: number;
   loading: boolean;
-
-  /** جلب الإشعارات من الباكاند */
-  fetchEvents: () => Promise<void>;
-
-  /** إضافة إشعار جديد عبر الباكاند */
-  addEvent: (payload: Omit<BookingEvent, 'id' | 'time' | 'unread'>) => Promise<BookingEvent | null>;
-
-  markRead: (id: string) => Promise<void>;
-  markAllRead: () => Promise<void>;
-  dismiss: (id: string) => Promise<void>;
-
-  /** للتوافق مع الكود القديم */
+  fetchEvents: () => void;
+  addEvent: (payload: Omit<BookingEvent, 'id' | 'time' | 'unread'>) => BookingEvent;
+  markRead: (id: string) => void;
+  markAllRead: () => void;
+  dismiss: (id: string) => void;
   getEventsForUser: (userId: string, role: NotifTargetRole) => BookingEvent[];
 }
 
-export const useNotifEventsStore = create<NotifEventsState>()((set, get) => ({
-  events: [],
-  unreadCount: 0,
-  loading: false,
+export const useNotifEventsStore = create<NotifEventsState>()(
+  persist(
+    (set, get) => ({
+      events: [],
+      unreadCount: 0,
+      loading: false,
 
-  fetchEvents: async () => {
-    const token = getToken();
-    if (!token) return;
-    try {
-      set({ loading: true });
-      const res  = await fetch(API, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.success) {
-        set({ events: data.notifications, unreadCount: data.unreadCount, loading: false });
-      }
-    } catch {
-      set({ loading: false });
-    }
-  },
+      fetchEvents: () => {
+        const count = get().events.filter((e) => e.unread).length;
+        set({ unreadCount: count });
+      },
 
-  addEvent: async (payload) => {
-    const token = getToken();
-    if (!token) return null;
-    try {
-      const res  = await fetch(API, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.success) {
-        // أضف للـ state مباشرة بدون انتظار polling
-        set((s) => ({
-          events: [data.notification, ...s.events],
-          unreadCount: s.unreadCount + 1,
-        }));
-        return data.notification;
-      }
-    } catch (e) {
-      console.error('[notifEvents] addEvent failed:', e);
-    }
-    return null;
-  },
+      addEvent: (payload) => {
+        const ev: BookingEvent = {
+          ...payload,
+          id:     `EV-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+          time:   new Date().toISOString(),
+          unread: true,
+        };
+        set((s) => ({ events: [ev, ...s.events], unreadCount: s.unreadCount + 1 }));
+        return ev;
+      },
 
-  markRead: async (id) => {
-    const token = getToken();
-    if (!token) return;
-    set((s) => ({
-      events: s.events.map((e) => (e.id === id ? { ...e, unread: false } : e)),
-      unreadCount: Math.max(0, s.unreadCount - 1),
-    }));
-    fetch(`${API}/${id}/read`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-  },
+      markRead: (id) => set((s) => ({
+        events: s.events.map((e) => e.id === id ? { ...e, unread: false } : e),
+        unreadCount: Math.max(0, s.unreadCount - 1),
+      })),
 
-  markAllRead: async () => {
-    const token = getToken();
-    if (!token) return;
-    set((s) => ({ events: s.events.map((e) => ({ ...e, unread: false })), unreadCount: 0 }));
-    fetch(`${API}/read-all`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-  },
+      markAllRead: () => set((s) => ({
+        events: s.events.map((e) => ({ ...e, unread: false })),
+        unreadCount: 0,
+      })),
 
-  dismiss: async (id) => {
-    const token = getToken();
-    set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
-    if (token) {
-      fetch(`${API}/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-    }
-  },
+      dismiss: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
 
-  getEventsForUser: (userId, role) => {
-    return get().events.filter((e) => {
-      if (e.targetRole !== role) return false;
-      if (e.targetUserId) return e.targetUserId === userId;
-      return true;
-    });
-  },
-}));
+      getEventsForUser: (userId, role) => get().events.filter((e) => {
+        if (e.targetRole !== role) return false;
+        if (e.targetUserId) return e.targetUserId === userId;
+        return true;
+      }),
+    }),
+    { name: 'stay-booking-events' }
+  )
+);
