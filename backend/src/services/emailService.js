@@ -1,32 +1,23 @@
 /**
  * backend/src/services/emailService.js
- * خدمة البريد الإلكتروني الموحدة — متوافقة كلياً مع Railway
  */
-
 const nodemailer = require('nodemailer');
 
-// إعداد الناقل باستخدام Port 587 لتفادي حظر الشبكات في البيئات السحابية
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // يجب أن تكون false مع البورت 587
-  requireTLS: true, // إجبار التشفير عبر STARTTLS
+  service: 'gmail', // استخدام المعرف المباشر لخدمة Gmail بدلاً من host/port
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    pass: process.env.MAIL_PASS, // App Password المكون من 16 حرفاً
   },
+  pool: true, // تفعيل Pool لمنع فتح وإغلاق اتصالات جديدة في كل طلب
+  maxConnections: 5,
+  maxMessages: 100,
   tls: {
-    rejectUnauthorized: false, // تجنب مشاكل شهادات SSL داخل الحاويات
-    ciphers: 'SSLv3',
+    rejectUnauthorized: false,
   },
-  connectionTimeout: 25000, // 25 ثانية مهلة الاتصال
-  greetingTimeout: 20000,
-  socketTimeout: 25000,
+  connectionTimeout: 30000,
 });
 
-/**
- * إرسال رمز التحقق OTP
- */
 async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
   const fromName = process.env.MAIL_FROM_NAME || 'ضيافة - Dhiyafa';
 
@@ -38,8 +29,7 @@ async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F3EEE1;padding:32px 16px;">
   <tr><td align="center">
     <table width="560" cellpadding="0" cellspacing="0"
-      style="max-width:100%;background:#fff;border-radius:20px;overflow:hidden;
-             box-shadow:0 8px 32px rgba(29,45,40,.12);border:1px solid #EDE6D6;">
+      style="max-width:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(29,45,40,.12);border:1px solid #EDE6D6;">
       <tr>
         <td style="background:linear-gradient(135deg,#0E5C4A,#0A4437);padding:28px 36px 24px;text-align:center;">
           <div style="display:inline-block;background:rgba(255,255,255,.15);border-radius:10px;padding:6px 18px;margin-bottom:10px;">
@@ -70,7 +60,6 @@ async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
           <div style="background:#FFF8EC;border:1px solid #F5D87A;border-radius:10px;padding:12px 16px;">
             <p style="margin:0;font-size:12px;color:#7A5A00;line-height:1.7;">⚠️ لا تشارك هذا الرمز مع أي شخص. فريق ضيافة لن يطلب منك هذا الرمز أبداً.</p>
           </div>
-          <p style="color:#8A968F;font-size:12px;margin:12px 0 0;line-height:1.6;">إذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.</p>
         </td>
       </tr>
       <tr>
@@ -92,9 +81,6 @@ async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
   });
 }
 
-/**
- * إرسال بريد تأكيد الحجز
- */
 async function sendBookingConfirmationEmail(toEmail, booking, htmlContent) {
   const fromName = process.env.MAIL_FROM_NAME || 'ضيافة - Dhiyafa';
 
