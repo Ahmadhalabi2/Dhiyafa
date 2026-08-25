@@ -1,5 +1,5 @@
 /**
- * emailService.js — متوافق مع Railway
+ * backend/src/services/emailService.js — خدمة البريد الإلكتروني الموحدة
  */
 
 const nodemailer = require('nodemailer');
@@ -7,15 +7,15 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // SSL مباشر
+  secure: true,
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // يمنع مشاكل الشهادات داخل Docker/Railway Containers
+    rejectUnauthorized: false, // يمنع مشاكل شهادات SSL في حاويات Railway
   },
-  connectionTimeout: 15000, // 15 ثانية
+  connectionTimeout: 15000,
   greetingTimeout: 10000,
   socketTimeout: 15000,
 });
