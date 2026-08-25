@@ -45,7 +45,6 @@ export default function Layout({ children, minimal = false }: Props) {
       { label: 'لوحة التحكم',   icon: LayoutDashboard, path: '/dashboard' },
       { label: 'الفنادق',       icon: Hotel,           path: '/hotels' },
       { label: 'الحجوزات',      icon: CalendarCheck,   path: '/bookings', badge: pendingBookingsCount },
-      { label: 'العملاء',       icon: Users,           path: '/customers' },
       { label: 'المستخدمين',    icon: ShieldCheck,     path: '/users' },
       { label: 'التحليلات',     icon: BarChart3,       path: '/analytics' },
       { label: 'الدعم الفني',   icon: MessagesSquare,  path: '/support' },

@@ -34,13 +34,13 @@ export default function SupportChatPage() {
 
   // ── زر الرجوع: يرجع خطوة لوراء للأدمن، ويسجل خروج للدعم ─────────────
   const handleBack = () => {
-    if (isAdminViewer) {
-      // الأدمن: يرجع خطوة للصفحة السابقة بدون تسجيل خروج
-      navigate(-1);
-    } else {
-      // الدعم أو المستخدم: يسجل خروج وينتقل لصفحة الدخول
+    if (isSupportAgent) {
+      // الدعم: تسجيل خروج والعودة لتسجيل الدخول
       logout();
-      navigate('/login');
+      navigate('/login', { replace: true });
+    } else {
+      // الأدمن والمستخدم: يرجع للصفحة السابقة
+      navigate(-1);
     }
   };
 

@@ -11,7 +11,6 @@ const { sendOtpEmail }                     = require('../services/emailService')
 const { sendOtpLimiter, verifyOtpLimiter } = require('../middleware/rateLimiter');
 const User = require('../models/User');
 
-// ── seed demo users بعد الاتصال بـ DB ─────────────────────────────────────
 async function seedDemoUsers() {
   const demos = [
     { name: 'Super Admin',   email: 'admin@stay.com',   password: 'admin123',   role: 'superadmin' },
@@ -25,9 +24,7 @@ async function seedDemoUsers() {
     }
   }
 }
-// نستدعيها من server.js بعد connectDB
 
-// ── Middleware ─────────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   const h = req.headers.authorization;
   if (!h?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'غير مصرّح.' });
@@ -35,7 +32,6 @@ function requireAuth(req, res, next) {
   catch { return res.status(401).json({ success: false, message: 'الجلسة منتهية.' }); }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 function signToken(user) {
@@ -50,9 +46,7 @@ function safeUser(u) {
   return { id: u._id.toString(), name: u.name, email: u.email, role: u.role, avatar: u.avatar ?? null };
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/send-otp
-// ══════════════════════════════════════════════════════════════════════════════
 router.post('/send-otp', sendOtpLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -78,9 +72,7 @@ router.post('/send-otp', sendOtpLimiter, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/verify-otp
-// ══════════════════════════════════════════════════════════════════════════════
 router.post('/verify-otp', verifyOtpLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -103,9 +95,7 @@ router.post('/verify-otp', verifyOtpLimiter, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// POST /api/auth/register — تسجيل مباشر بدون OTP
-// ══════════════════════════════════════════════════════════════════════════════
+// POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -126,9 +116,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/check-email
-// ══════════════════════════════════════════════════════════════════════════════
 router.post('/check-email', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: 'الإيميل مطلوب.' });
@@ -136,9 +124,7 @@ router.post('/check-email', async (req, res) => {
   return res.json({ success: true, taken });
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
 // POST /api/auth/login
-// ══════════════════════════════════════════════════════════════════════════════
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -155,9 +141,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
 // PATCH /api/auth/profile
-// ══════════════════════════════════════════════════════════════════════════════
 router.patch('/profile', requireAuth, async (req, res) => {
   try {
     const { name, currentPassword, newPassword } = req.body;
@@ -181,9 +165,7 @@ router.patch('/profile', requireAuth, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
 // DELETE /api/auth/account
-// ══════════════════════════════════════════════════════════════════════════════
 router.delete('/account', requireAuth, async (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ success: false, message: 'هذا الإجراء للمستخدمين فقط.' });
@@ -194,6 +176,24 @@ router.delete('/account', requireAuth, async (req, res) => {
     console.error('[delete-account]', err.message);
     return res.status(500).json({ success: false, message: 'خطأ في الخادم.' });
   }
+});
+
+// GET /api/auth/users — superadmin فقط
+router.get('/users', requireAuth, async (req, res) => {
+  if (req.user.role !== 'superadmin')
+    return res.status(403).json({ success: false, message: 'غير مصرّح.' });
+  const users = await User.find({}, '-passwordHash').lean();
+  return res.json({ success: true, users: users.map((u) => ({ ...u, id: u._id.toString(), createdAt: u.createdAt })) });
+});
+
+// DELETE /api/auth/users/:id — superadmin فقط
+router.delete('/users/:id', requireAuth, async (req, res) => {
+  if (req.user.role !== 'superadmin')
+    return res.status(403).json({ success: false, message: 'غير مصرّح.' });
+  if (req.params.id === req.user.id)
+    return res.status(400).json({ success: false, message: 'لا يمكن حذف حسابك الخاص.' });
+  await User.findByIdAndDelete(req.params.id);
+  return res.json({ success: true, message: 'تم حذف المستخدم.' });
 });
 
 module.exports = { router, seedDemoUsers };

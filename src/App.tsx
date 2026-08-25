@@ -8,7 +8,6 @@ import HomePage           from './pages/HomePage';
 import DashboardPage      from './pages/DashboardPage';
 import HotelsPage         from './pages/hotels/HotelsPage';
 import BookingsPage       from './pages/bookings/BookingsPage';
-import CustomersPage      from './pages/customers/CustomersPage';
 import AnalyticsPage      from './pages/analytics/AnalyticsPage';
 import RoomsPage          from './pages/rooms/RoomsPage';
 import RevenuePage        from './pages/revenue/RevenuePage';
@@ -49,7 +48,6 @@ export default function App() {
         <Route path="/support"       element={<ProtectedRoute><SupportChatPage /></ProtectedRoute>} />
 
         <Route path="/bookings"  element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
-        <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
         <Route path="/rooms"     element={<ProtectedRoute><RoomsPage /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
         <Route path="/revenue"   element={<ProtectedRoute><RevenuePage /></ProtectedRoute>} />
