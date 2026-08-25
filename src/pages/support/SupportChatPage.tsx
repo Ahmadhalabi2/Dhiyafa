@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useSupportChatStore } from '../../store/supportChatStore';
-import { Send, Loader2, ShieldQuestion, MessagesSquare, User, Sparkles, ArrowRight, Lock } from 'lucide-react';
+import { Send, Loader2, ShieldQuestion, MessagesSquare, User, Sparkles, ArrowRight, Lock, Trash2 } from 'lucide-react';
 import { useNotifEventsStore } from '../../store/notifEvents';
 
 export default function SupportChatPage() {
@@ -123,6 +123,16 @@ export default function SupportChatPage() {
   };
 
   const activeThread = threads?.find((t) => t.id === threadId);
+
+  // ── حذف سجل المحادثة ────────────────────────────────────────────────────
+  const handleDeleteThread = (thId: string, userName: string) => {
+    if (!confirm(`حذف سجل محادثة "${userName}" نهائياً؟`)) return;
+    useSupportChatStore.setState((s) => ({
+      threads:  s.threads.filter((t) => t.id !== thId),
+      messages: s.messages.filter((m) => m.threadId !== thId),
+    }));
+    if (threadId === thId) setThreadId('');
+  };
 
   const pageTitle = isAdminViewer
     ? 'أرشيف محادثات الدعم'
@@ -291,6 +301,15 @@ export default function SupportChatPage() {
                         </div>
                         {!isAdminViewer && hasUnread && (
                           <span style={S.unreadBadge}>{unreadCount}</span>
+                        )}
+                        {isSupportAgent && (
+                          <button
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#BD5B3E', padding: 4, opacity: 0.6, flexShrink: 0 }}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteThread(th.id, th.userName); }}
+                            title="حذف السجل"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         )}
                       </button>
                     );
