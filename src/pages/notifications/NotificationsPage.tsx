@@ -30,13 +30,14 @@ function timeAgo(iso: string): string {
 export default function NotificationsPage() {
   const { events, fetchEvents, markAllRead, markRead, dismiss, unreadCount } = useNotifEventsStore();
 
-  // جلب عند فتح الصفحة
-  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  // جلب عند فتح الصفحة + تعليم مقروء
 
   // تعليم كل الإشعارات مقروءة عند الفتح
   useEffect(() => {
-    if (unreadCount > 0) markAllRead();
-  }, []);   // eslint-disable-line react-hooks/exhaustive-deps
+    fetchEvents();
+    markAllRead();
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <Layout>

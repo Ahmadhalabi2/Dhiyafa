@@ -57,7 +57,7 @@ export default function SupportChatPage() {
         .then((th) => setThreadId(th.id))
         .catch(() => {});
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line
   }, [currentUser?.id]);
 
   // ── polling: جلب الرسائل كل 5 ثوانٍ ──────────────────────────────────
