@@ -1,23 +1,27 @@
 /**
- * backend/src/services/emailService.js — خدمة البريد الإلكتروني الموحدة
+ * backend/src/services/emailService.js
+ * خدمة البريد الإلكتروني الموحدة — متوافقة كلياً مع Railway
  */
 
 const nodemailer = require('nodemailer');
 
+// إعداد الناقل باستخدام Port 587 لتفادي حظر الشبكات في البيئات السحابية
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // يجب أن تكون false مع البورت 587
+  requireTLS: true, // إجبار التشفير عبر STARTTLS
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // يمنع مشاكل شهادات SSL في حاويات Railway
+    rejectUnauthorized: false, // تجنب مشاكل شهادات SSL داخل الحاويات
+    ciphers: 'SSLv3',
   },
-  connectionTimeout: 15000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  connectionTimeout: 25000, // 25 ثانية مهلة الاتصال
+  greetingTimeout: 20000,
+  socketTimeout: 25000,
 });
 
 /**
