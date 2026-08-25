@@ -1,20 +1,26 @@
 /**
- * emailService.js — Gmail SMTP via port 587
+ * emailService.js — خدمة إرسال البريد الإلكتروني عبر Gmail SMTP
  */
 
 const nodemailer = require('nodemailer');
 
+// إعداد المحول الموحد مع المهلة الزمنية للبورت 465
 const transporter = nodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,
-  secure: false,
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // استخدام SSL/TLS مباشر
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    pass: process.env.MAIL_PASS, // يجب استخدام App Password
   },
-  tls: { rejectUnauthorized: false },
+  connectionTimeout: 10000, // 10 ثواني كحد أقصى للاتصال
+  greetingTimeout: 5000,
+  socketTimeout: 10000,
 });
 
+/**
+ * إرسال رمز التحقق OTP
+ */
 async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
   const fromName = process.env.MAIL_FROM_NAME || 'ضيافة - Dhiyafa';
 
@@ -71,13 +77,28 @@ async function sendOtpEmail(toEmail, toName, otp, expiryMin = 10) {
 </table>
 </body></html>`;
 
-  await transporter.sendMail({
-    from:    `"${fromName}" <${process.env.MAIL_USER}>`,
-    to:      toEmail,
+  return await transporter.sendMail({
+    from: `"${fromName}" <${process.env.MAIL_USER}>`,
+    to: toEmail,
     subject: `${otp} — رمز التحقق لحسابك في ضيافة`,
     html,
     text: `أهلاً ${toName}،\n\nرمز التحقق: ${otp}\nصالح لمدة ${expiryMin} دقائق.\n\nلا تشاركه مع أحد.\n\nفريق ضيافة`,
   });
 }
 
-module.exports = { sendOtpEmail };
+/**
+ * إرسال بريد تأكيد الحجز
+ */
+async function sendBookingConfirmationEmail(toEmail, booking, htmlContent) {
+  const fromName = process.env.MAIL_FROM_NAME || 'ضيافة - Dhiyafa';
+
+  return await transporter.sendMail({
+    from: `"${fromName}" <${process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: `✅ تأكيد حجزك في ${booking.hotelName} — ${booking.id}`,
+    html: htmlContent,
+    text: `تأكيد حجزك في ضيافة\nرقم الحجز: ${booking.id}\nالفندق: ${booking.hotelName}\nالوصول: ${booking.checkIn}\nالمغادرة: ${booking.checkOut}\nالمبلغ: $${booking.amount}`,
+  });
+}
+
+module.exports = { sendOtpEmail, sendBookingConfirmationEmail };

@@ -7,16 +7,8 @@
  */
 
 const router = require('express').Router();
-const jwt    = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,
-  secure: false,
-  auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
-  tls: { rejectUnauthorized: false },
-});
+const jwt = require('jsonwebtoken');
+const { sendBookingConfirmationEmail } = require('../emailService');
 
 function requireAuth(req, res, next) {
   const h = req.headers.authorization;
@@ -25,10 +17,10 @@ function requireAuth(req, res, next) {
   catch { return res.status(401).json({ success: false, message: 'الجلسة منتهية.' }); }
 }
 
-const OTP_DOMAINS = ['gmail.com','yahoo.com','yahoo.co.uk','outlook.com','hotmail.com','live.com'];
-function isOtpEmail(email = '') {
-  const domain = email.split('@')[1]?.toLowerCase() ?? '';
-  return OTP_DOMAINS.includes(domain);
+// فحص قياسي لصحة البريد الإلكتروني بدلاً من حظر نطاقات محددة
+function isValidEmail(email = '') {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 // ── بناء HTML الإيميل ─────────────────────────────────────────────────────
@@ -207,7 +199,6 @@ function buildConfirmationHtml(booking) {
 
 // ══════════════════════════════════════════════════════════════════════════════
 // POST /api/bookings/send-confirmation
-// Body: { booking: { ...Booking fields }, userEmail: string }
 // ══════════════════════════════════════════════════════════════════════════════
 router.post('/send-confirmation', requireAuth, async (req, res) => {
   if (req.user.role !== 'superadmin')
@@ -217,18 +208,12 @@ router.post('/send-confirmation', requireAuth, async (req, res) => {
   if (!booking || !userEmail)
     return res.status(400).json({ success: false, message: 'booking و userEmail مطلوبان.' });
 
-  if (!isOtpEmail(userEmail))
-    return res.status(400).json({ success: false, message: 'هذا الإيميل لا يدعم الإرسال.' });
+  if (!isValidEmail(userEmail))
+    return res.status(400).json({ success: false, message: 'صيغة البريد الإلكتروني غير صحيحة.' });
 
   try {
     const html = buildConfirmationHtml(booking);
-    await transporter.sendMail({
-      from:    `"${process.env.MAIL_FROM_NAME || 'ضيافة'}" <${process.env.MAIL_USER}>`,
-      to:      userEmail,
-      subject: `✅ تأكيد حجزك في ${booking.hotelName} — ${booking.id}`,
-      html,
-      text: `تأكيد حجزك في ضيافة\nرقم الحجز: ${booking.id}\nالفندق: ${booking.hotelName}\nالوصول: ${booking.checkIn}\nالمغادرة: ${booking.checkOut}\nالمبلغ: $${booking.amount}`,
-    });
+    await sendBookingConfirmationEmail(userEmail, booking, html);
     console.log(`[Booking] Confirmation sent to ${userEmail} for ${booking.id}`);
     return res.json({ success: true, message: 'تم إرسال تأكيد الحجز بنجاح.' });
   } catch (err) {
