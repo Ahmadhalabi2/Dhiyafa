@@ -1,21 +1,23 @@
 /**
- * emailService.js — خدمة إرسال البريد الإلكتروني عبر Gmail SMTP
+ * emailService.js — متوافق مع Railway
  */
 
 const nodemailer = require('nodemailer');
 
-// إعداد المحول الموحد مع المهلة الزمنية للبورت 465
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // استخدام SSL/TLS مباشر
+  secure: true, // SSL مباشر
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS, // يجب استخدام App Password
+    pass: process.env.MAIL_PASS,
   },
-  connectionTimeout: 10000, // 10 ثواني كحد أقصى للاتصال
-  greetingTimeout: 5000,
-  socketTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false, // يمنع مشاكل الشهادات داخل Docker/Railway Containers
+  },
+  connectionTimeout: 15000, // 15 ثانية
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 /**
