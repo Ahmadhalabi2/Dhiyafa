@@ -1,17 +1,19 @@
 /**
- * routes/auth.js — fileStore version (local)
+ * routes/auth.js — fileStore version
  */
 
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 
-const { saveOtp, verifyOtp }               = require('../services/otpStore');
-const { sendOtpEmail }                     = require('../services/emailService');
-const { sendOtpLimiter, verifyOtpLimiter } = require('../middleware/rateLimiter');
-const { createFileStore }                  = require('../db/fileStore');
+const { saveOtp, verifyOtp }                         = require('../services/otpStore');
+const { saveResetOtp, verifyResetOtp, consumeResetOtp } = require('../services/passwordResetStore');
+const { sendOtpEmail, sendPasswordResetEmail }        = require('../services/emailService');
+const { sendOtpLimiter, verifyOtpLimiter }            = require('../middleware/rateLimiter');
+const { requireAuth }                                 = require('../middleware/auth');
+const { createFileStore }                             = require('../db/fileStore');
 
-// ── Users DB ────────────────────────────────────────────────────────────────
+// ── Users DB ─────────────────────────────────────────────────────────────────
 const DEMO_USERS = [
   { id: '1', name: 'Super Admin',   email: 'admin@stay.com',   passwordHash: bcrypt.hashSync('admin123',   10), role: 'superadmin', createdAt: Date.now() },
   { id: '2', name: 'Support Agent', email: 'support@stay.com', passwordHash: bcrypt.hashSync('support123', 10), role: 'support',    createdAt: Date.now() },
@@ -31,14 +33,7 @@ const usersStore = createFileStore('users', DEMO_USERS);
   if (changed) usersStore.set(users);
 })();
 
-// ── Middleware ───────────────────────────────────────────────────────────────
-function requireAuth(req, res, next) {
-  const h = req.headers.authorization;
-  if (!h?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'غير مصرّح.' });
-  try { req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET); next(); }
-  catch { return res.status(401).json({ success: false, message: 'الجلسة منتهية.' }); }
-}
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 function signToken(user) {
@@ -53,7 +48,7 @@ function safeUser(u) {
   return { id: u.id, name: u.name, email: u.email, role: u.role, avatar: u.avatar ?? null };
 }
 
-// POST /api/auth/send-otp
+// ── POST /api/auth/send-otp ───────────────────────────────────────────────────
 router.post('/send-otp', sendOtpLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -79,7 +74,7 @@ router.post('/send-otp', sendOtpLimiter, async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-otp
+// ── POST /api/auth/verify-otp ─────────────────────────────────────────────────
 router.post('/verify-otp', verifyOtpLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -103,7 +98,7 @@ router.post('/verify-otp', verifyOtpLimiter, async (req, res) => {
   }
 });
 
-// POST /api/auth/register
+// ── POST /api/auth/register ───────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -121,7 +116,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/check-email
+// ── POST /api/auth/check-email ────────────────────────────────────────────────
 router.post('/check-email', (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, message: 'الإيميل مطلوب.' });
@@ -129,7 +124,7 @@ router.post('/check-email', (req, res) => {
   return res.json({ success: true, taken });
 });
 
-// POST /api/auth/login
+// ── POST /api/auth/login ──────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -146,7 +141,73 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// PATCH /api/auth/profile
+// ── POST /api/auth/forgot-password — إرسال OTP لإعادة تعيين كلمة المرور ───────
+router.post('/forgot-password', sendOtpLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'الإيميل مطلوب.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.status(400).json({ success: false, message: 'صيغة الإيميل غير صحيحة.' });
+
+    // نتحقق أن الإيميل موجود — لكن نرد بنفس الرسالة في كلا الحالتين لتجنب user enumeration
+    const user = usersStore.get().find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      const otp = generateOtp();
+      const expiryMin = parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10;
+      saveResetOtp(email, otp);
+      await sendPasswordResetEmail(email, user.name, otp, expiryMin);
+      console.log(`[PasswordReset] OTP sent to ${email} — code: ${otp}`);
+    }
+
+    // نرد بنفس الرسالة سواء وُجد الإيميل أم لا
+    return res.json({ success: true, message: 'إذا كان الإيميل مسجلاً، ستصلك رسالة برمز التحقق.' });
+  } catch (err) {
+    console.error('[forgot-password]', err.message);
+    return res.status(500).json({ success: false, message: 'خطأ في الخادم.' });
+  }
+});
+
+// ── POST /api/auth/reset-password — تغيير كلمة المرور بعد التحقق من OTP ───────
+router.post('/reset-password', verifyOtpLimiter, async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ success: false, message: 'الإيميل والرمز وكلمة المرور الجديدة مطلوبة.' });
+    if (newPassword.length < 6)
+      return res.status(400).json({ success: false, message: 'كلمة المرور الجديدة 6 أحرف على الأقل.' });
+
+    // التحقق من OTP
+    const result = verifyResetOtp(email, otp);
+    if (!result.valid) {
+      const msgs = {
+        not_found:    'لم يُرسل رمز تحقق لهذا الإيميل.',
+        expired:      'انتهت صلاحية الرمز. أعد الطلب.',
+        wrong:        'الرمز غير صحيح.',
+        max_attempts: 'تجاوزت عدد المحاولات. أعد الطلب.',
+      };
+      return res.status(400).json({ success: false, message: msgs[result.reason] || 'رمز غير صحيح.', reason: result.reason });
+    }
+
+    // تحديث كلمة المرور
+    const users = usersStore.get();
+    const idx   = users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) return res.status(404).json({ success: false, message: 'المستخدم غير موجود.' });
+
+    users[idx] = { ...users[idx], passwordHash: await bcrypt.hash(newPassword, 12) };
+    usersStore.set(users);
+
+    // حذف OTP بعد الاستخدام
+    consumeResetOtp(email);
+    console.log(`[PasswordReset] Password updated for ${email}`);
+
+    return res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.' });
+  } catch (err) {
+    console.error('[reset-password]', err.message);
+    return res.status(500).json({ success: false, message: 'خطأ في الخادم.' });
+  }
+});
+
+// ── PATCH /api/auth/profile ───────────────────────────────────────────────────
 router.patch('/profile', requireAuth, async (req, res) => {
   try {
     const { name, currentPassword, newPassword } = req.body;
@@ -171,7 +232,7 @@ router.patch('/profile', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE /api/auth/account
+// ── DELETE /api/auth/account ──────────────────────────────────────────────────
 router.delete('/account', requireAuth, (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ success: false, message: 'هذا الإجراء للمستخدمين فقط.' });
@@ -187,14 +248,27 @@ router.delete('/account', requireAuth, (req, res) => {
   }
 });
 
-// GET /api/auth/users
+// ── GET /api/auth/users — جلب كل المستخدمين مع pagination (superadmin) ─────────
 router.get('/users', requireAuth, (req, res) => {
   if (req.user.role !== 'superadmin') return res.status(403).json({ success: false, message: 'غير مصرّح.' });
-  const users = usersStore.get().map(({ passwordHash, ...u }) => u);
-  return res.json({ success: true, users });
+
+  let users = usersStore.get().map(({ passwordHash, ...u }) => u);
+
+  // فلتر اختياري بالـ role
+  const { role } = req.query;
+  if (role) users = users.filter((u) => u.role === role);
+
+  // Pagination
+  const page       = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit      = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+  const total      = users.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const data       = users.slice((page - 1) * limit, page * limit);
+
+  return res.json({ success: true, users: data, pagination: { page, limit, total, totalPages } });
 });
 
-// DELETE /api/auth/users/:id
+// ── DELETE /api/auth/users/:id (superadmin) ───────────────────────────────────
 router.delete('/users/:id', requireAuth, (req, res) => {
   if (req.user.role !== 'superadmin') return res.status(403).json({ success: false, message: 'غير مصرّح.' });
   if (req.params.id === req.user.id) return res.status(400).json({ success: false, message: 'لا يمكن حذف حسابك.' });

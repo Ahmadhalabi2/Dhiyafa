@@ -2,18 +2,11 @@ const router = require('express').Router();
 const multer = require('multer');
 const path   = require('path');
 const fs     = require('fs');
-const jwt    = require('jsonwebtoken');
+const { requireAuth } = require('../middleware/auth');
 const { usersStore } = require('./auth');
 
 const AVATARS_DIR = path.join(__dirname, '../../uploads/avatars');
 if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
-
-function requireAuth(req, res, next) {
-  const h = req.headers.authorization;
-  if (!h?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'غير مصرّح.' });
-  try { req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET); next(); }
-  catch { return res.status(401).json({ success: false, message: 'الجلسة منتهية.' }); }
-}
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, AVATARS_DIR),

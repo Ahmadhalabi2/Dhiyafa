@@ -68,9 +68,11 @@ app.use((err, _req, res, _next) => {
 // ── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🚀 ضيافة Backend running at http://localhost:${PORT}`);
-  console.log(`   Health:     http://localhost:${PORT}/api/health`);
-  console.log(`   Send OTP:   POST http://localhost:${PORT}/api/auth/send-otp`);
-  console.log(`   Verify OTP: POST http://localhost:${PORT}/api/auth/verify-otp`);
+  console.log(`   Health:           http://localhost:${PORT}/api/health`);
+  console.log(`   Auth:             POST http://localhost:${PORT}/api/auth/login`);
+  console.log(`   Forgot Password:  POST http://localhost:${PORT}/api/auth/forgot-password`);
+  console.log(`   Reset Password:   POST http://localhost:${PORT}/api/auth/reset-password`);
+  console.log(`   Bookings:         GET  http://localhost:${PORT}/api/bookings`);
   console.log(`\n   MAIL_USER: ${process.env.MAIL_USER || '⚠️  not set!'}`);
   console.log(`   CLIENT_URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}\n`);
 });

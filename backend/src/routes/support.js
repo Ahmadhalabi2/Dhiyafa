@@ -1,17 +1,10 @@
 const router = require('express').Router();
-const jwt    = require('jsonwebtoken');
+const { requireAuth } = require('../middleware/auth');
 const { createFileStore } = require('../db/fileStore');
 
 const threadsStore   = createFileStore('support_threads',   []);
 const messagesStore  = createFileStore('support_messages',  []);
 const feedbacksStore = createFileStore('support_feedbacks', []);
-
-function requireAuth(req, res, next) {
-  const h = req.headers.authorization;
-  if (!h?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'غير مصرّح.' });
-  try { req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET); next(); }
-  catch { return res.status(401).json({ success: false, message: 'الجلسة منتهية.' }); }
-}
 
 const uid = (p) => `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
 const now = () => Date.now();
