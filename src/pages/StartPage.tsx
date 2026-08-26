@@ -65,6 +65,18 @@ export default function StartPage() {
           from { opacity: 0; transform: scale(0.96) translateY(20px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
+        @keyframes logoBreathe {
+          0%, 100% { transform: translateY(0) rotate(0deg); box-shadow: 0 12px 24px rgba(198,154,58,0.18); }
+          50% { transform: translateY(-5px) rotate(-2deg); box-shadow: 0 18px 30px rgba(198,154,58,0.28); }
+        }
+        @keyframes stepReveal {
+          from { opacity: 0; transform: translateX(18px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes softGlow {
+          0%, 100% { opacity: .55; }
+          50% { opacity: 1; }
+        }
 
                 html, body, #root { margin: 0; width: 100%; }
         .animate-fade-in {
@@ -74,9 +86,13 @@ export default function StartPage() {
         .delay-1 { animation-delay: 0.15s; opacity: 0; }
         .delay-2 { animation-delay: 0.3s; opacity: 0; }
         .delay-3 { animation-delay: 0.45s; opacity: 0; }
+        .delay-4 { animation-delay: 0.6s; opacity: 0; }
+        .delay-5 { animation-delay: 0.75s; opacity: 0; }
+        .brand-seal { animation: logoBreathe 3.8s ease-in-out 1s infinite; }
 
-        .premium-glass-card {
-          animation: cardReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                .premium-glass-card {
+          animation: cardReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+
           transition: cubic-bezier(0.16, 1, 0.3, 1) 0.5s !important;
         }
         .premium-glass-card:hover {
@@ -85,17 +101,26 @@ export default function StartPage() {
                       0 0 0 1px rgba(14, 92, 74, 0.25) !important;
         }
 
-        .interactive-step {
+                .interactive-step {
+          opacity: 0;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .interactive-step:nth-of-type(2) { animation: stepReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards; }
+        .interactive-step:nth-of-type(3) { animation: stepReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.92s forwards; }
+        .interactive-step:nth-of-type(4) { animation: stepReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.09s forwards; }
+        .interactive-step:nth-of-type(5) { animation: stepReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.26s forwards; }
+        .connector-pulse { animation: softGlow 2.6s ease-in-out 1.1s infinite; }
+
         .interactive-step:hover {
           background: rgba(255, 255, 255, 0.85) !important;
           box-shadow: 0 12px 24px rgba(28, 43, 39, 0.05) !important;
           transform: translateX(-8px);
         }
 
-        .btn-luxury-primary {
+                .btn-luxury-primary {
+          animation: softGlow 2.8s ease-in-out 1.5s infinite;
           position: relative;
+
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
@@ -127,9 +152,13 @@ export default function StartPage() {
           color: #1C2B27 !important;
         }
 
-        .stat-box {
+                .stat-box {
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .stat-box:nth-child(1) { animation: textReveal 0.7s ease-out 0.85s both; }
+        .stat-box:nth-child(2) { animation: textReveal 0.7s ease-out 1s both; }
+        .stat-box:nth-child(3) { animation: textReveal 0.7s ease-out 1.15s both; }
+
         .stat-box:hover {
           transform: translateY(-6px);
           background: #fff !important;
@@ -137,7 +166,12 @@ export default function StartPage() {
           box-shadow: 0 15px 30px rgba(28, 43, 39, 0.04) !important;
         }
 
+                @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
         /* Responsive Breakpoints & Media Queries */
+
         .hero-container {
           display: grid;
           grid-template-columns: 1fr;
@@ -198,8 +232,8 @@ export default function StartPage() {
         <div className="hero-container">
           {/* Right-To-Left Left Column: High-Impact Typography & Controls */}
           <div style={S.heroLeft}>
-            <div className="animate-fade-in" style={S.brandLockup}>
-              <div style={S.brandSeal}><Hotel size={24} strokeWidth={1.8} /></div>
+            <div className="animate-fade-in brand-lockup" style={S.brandLockup}>
+              <div className="brand-seal" style={S.brandSeal}><Hotel size={24} strokeWidth={1.8} /></div>
               <div>
                 <strong style={S.brandName}>ضِيافة</strong>
                 <span style={S.brandCaption}>حجزٌ أوضح، إقامةٌ أهدأ</span>
@@ -247,7 +281,7 @@ export default function StartPage() {
             <div className="premium-glass-card" style={S.glassCard}>
               
               {/* Dynamic Glowing Pipeline Connector */}
-              <div style={S.connectorPipeline} />
+              <div className="connector-pulse" style={S.connectorPipeline} />
 
               {/* Step 1 */}
               <div className="interactive-step" style={S.stepRow}>
