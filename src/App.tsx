@@ -33,19 +33,82 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<StartPage />} />
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <StartPage />
+          } 
+        />
 
-        <Route path="/login"  element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <LoginPage />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to="/home" replace />              : <SignupPage />} />
+        <Route 
+          path="/login"  
+          element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <LoginPage />} 
+        />
+        <Route 
+          path="/signup" 
+          element={isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <SignupPage />} 
+        />
 
-        <Route path="/home"          element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/hotels"        element={<ProtectedRoute><HotelsPage /></ProtectedRoute>} />
-        <Route path="/settings"      element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-        <Route path="/profile"       element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/my-bookings"   element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
-        <Route path="/book-hotel/:id" element={<ProtectedRoute><BookHotelPage /></ProtectedRoute>} />
-        <Route path="/support"       element={<ProtectedRoute><SupportChatPage /></ProtectedRoute>} />
+        {/* حماية جميع المسارات العامة لضمان عدم دخول حساب الدعم إليها بالخطأ */}
+        <Route 
+          path="/home"          
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <HomePage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/hotels"        
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <HotelsPage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings"      
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <SettingsPage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/notifications" 
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <NotificationsPage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile"       
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <ProfilePage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/my-bookings"   
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <MyBookingsPage />}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/book-hotel/:id" 
+          element={
+            <ProtectedRoute>
+              {role === 'support' ? <Navigate to="/support" replace /> : <BookHotelPage />}
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* صفحة الدعم متاحة للجميع بعد تسجيل الدخول */}
+        <Route path="/support" element={<ProtectedRoute><SupportChatPage /></ProtectedRoute>} />
 
         <Route path="/bookings"  element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
         <Route path="/rooms"     element={<ProtectedRoute><RoomsPage /></ProtectedRoute>} />
@@ -55,7 +118,8 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute requiredRole="superadmin"><DashboardPage /></ProtectedRoute>} />
         <Route path="/users"     element={<ProtectedRoute requiredRole="superadmin"><UsersPage /></ProtectedRoute>} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* إعادة التوجيه الافتراضية للجميع */}
+        <Route path="*" element={<Navigate to={isAuthenticated ? getDefaultRoute() : "/"} replace />} />
       </Routes>
     </BrowserRouter>
   );
