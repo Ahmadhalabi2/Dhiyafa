@@ -155,8 +155,15 @@ router.post('/forgot-password', sendOtpLimiter, async (req, res) => {
       const otp = generateOtp();
       const expiryMin = parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10;
       saveResetOtp(email, otp);
-      await sendPasswordResetEmail(email, user.name, otp, expiryMin);
-      console.log(`[PasswordReset] OTP sent to ${email} — code: ${otp}`);
+      console.log(`[PasswordReset] OTP for ${email} — code: ${otp}`);
+      // نحاول نرسل الإيميل، بس حتى لو فشل ما نوقف العملية
+      try {
+        await sendPasswordResetEmail(email, user.name, otp, expiryMin);
+        console.log(`[PasswordReset] Email sent to ${email}`);
+      } catch (mailErr) {
+        console.error(`[PasswordReset] Email failed (check MAIL_PASS): ${mailErr.message}`);
+        // نكمل — الـ OTP محفوظ والمطور يشوفه بالـ console
+      }
     }
 
     // نرد بنفس الرسالة سواء وُجد الإيميل أم لا
