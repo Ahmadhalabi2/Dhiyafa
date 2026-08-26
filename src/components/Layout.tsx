@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Hotel, CalendarCheck, Users, BarChart3,
-  Settings, Bell, LogOut, Menu, X, Globe, Search, User,
+  Settings, Bell, LogOut, Menu, X, User,
   ShieldCheck, BookOpenCheck, CalendarRange, MessagesSquare
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -34,7 +34,6 @@ export default function Layout({ children, minimal = false }: Props) {
   );
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [search, setSearch] = useState('');
 
   const role = currentUser?.role as string;
   const isCustomer = role !== 'superadmin' && role !== 'support';
@@ -67,12 +66,6 @@ export default function Layout({ children, minimal = false }: Props) {
   const go = (path: string) => { setSidebarOpen(false); navigate(path); };
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && search.trim()) {
-      const match = NAV.find((n) => n.label.toLowerCase().includes(search.toLowerCase()));
-      if (match) { go(match.path); setSearch(''); }
-    }
-  };
 
   const initials   = currentUser?.name?.slice(0, 2).toUpperCase() || 'U';
   const avatarUrl  = useAuthStore((s) => s.getAvatarUrl());
@@ -127,7 +120,7 @@ export default function Layout({ children, minimal = false }: Props) {
         aria-label="Sidebar navigation" aria-hidden={!sidebarOpen}>
         <div style={S.sidebarTop}>
           <button style={S.logoWrap} onClick={() => go('/home')}>
-            <div style={S.logoMark}><Globe size={18} color="#fff" /></div>
+            <div style={S.logoMark}><Hotel size={18} color="#8B681B" strokeWidth={2.2} /></div>
             <span style={S.logoText}>ضِيافة</span>
           </button>
           <button style={S.closeBtn} onClick={closeSidebar} aria-label="إغلاق القائمة">
@@ -176,7 +169,7 @@ export default function Layout({ children, minimal = false }: Props) {
         <header style={{ ...S.topbar, ...(minimal ? { justifyContent: 'flex-start' } : {}) }}>
           {minimal ? (
             <button style={S.desktopLogo} onClick={() => go('/home')}>
-              <div style={{ ...S.logoMark, width: 28, height: 28 }}><Globe size={14} color="#fff" /></div>
+              <div style={{ ...S.logoMark, width: 28, height: 28 }}><Hotel size={14} color="#8B681B" strokeWidth={2.2} /></div>
               <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-ink)', fontFamily: 'var(--font-display)' }}>ضِيافة</span>
             </button>
           ) : (
@@ -186,18 +179,9 @@ export default function Layout({ children, minimal = false }: Props) {
               <Menu size={20} />
             </button>
             <button style={S.desktopLogo} onClick={() => go('/home')}>
-              <div style={{ ...S.logoMark, width: 28, height: 28 }}><Globe size={14} color="#fff" /></div>
+              <div style={{ ...S.logoMark, width: 28, height: 28 }}><Hotel size={14} color="#8B681B" strokeWidth={2.2} /></div>
               <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-ink)', fontFamily: 'var(--font-display)' }}>ضِيافة</span>
             </button>
-            <div style={S.searchBox}>
-              <Search size={15} color="var(--color-muted)" />
-              <input style={S.searchIn}
-                placeholder="ابحث هنا… (اضغط Enter)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleSearch}
-                aria-label="بحث في الصفحات" />
-            </div>
           </div>
 
           <div style={S.topRight}>
@@ -244,7 +228,7 @@ const S: Record<string, React.CSSProperties> = {
   sidebar: { position: 'fixed', top: 0, right: 0, height: '100vh', width: 240, background: 'var(--color-surface)', borderLeft: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', zIndex: 200, transition: 'transform 0.25s cubic-bezier(.4,0,.2,1)' },
   sidebarTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 14px 14px', borderBottom: '1px solid var(--color-border)' },
   logoWrap: { display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 },
-  logoMark: { width: 32, height: 32, background: 'linear-gradient(135deg,var(--color-primary),var(--color-primary-dark))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  logoMark: { width: 32, height: 32, background: 'linear-gradient(135deg,var(--color-accent-soft),#E8D29A)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   logoText: { fontWeight: 700, fontSize: 17, color: 'var(--color-ink)', fontFamily: 'var(--font-display)' },
   closeBtn: { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' },
 
@@ -266,8 +250,6 @@ const S: Record<string, React.CSSProperties> = {
   topbar: { position: 'sticky', top: 0, height: 60, background: 'rgba(250,246,236,0.92)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', zIndex: 100, gap: 12 },
   topLeft: { display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 },
   desktopLogo: { display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, flexShrink: 0 },
-  searchBox: { display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-surface-alt)', borderRadius: 8, padding: '7px 12px', flex: 1, maxWidth: 280 },
-  searchIn: { background: 'none', border: 'none', outline: 'none', fontSize: 13, color: 'var(--color-ink)', width: '100%', textAlign: 'right', fontFamily: 'var(--font-body)' },
   topRight: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 },
   iconBtn: { position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-soft)', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   notifBadge: { position: 'absolute', top: 4, right: 4, width: 16, height: 16, background: 'var(--color-terracotta)', color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
