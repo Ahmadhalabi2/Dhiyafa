@@ -1,16 +1,22 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
+
 import { useAuthStore } from '../store/authStore';
 import { useHotelsStore } from '../store/hotelsStore';
 import { HOTELS } from '../data/hotels';
 import { SYRIA_PROVINCES } from '../data/syria';
-import { ArrowLeft, CalendarCheck, Shield, Wallet, Clock } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, Shield, Wallet, Clock, Hotel } from 'lucide-react';
 
 export default function StartPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuthStore();
   const { initFrom, hotels } = useHotelsStore();
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, []);
 
   useEffect(() => {
     initFrom(
@@ -32,7 +38,8 @@ export default function StartPage() {
   }, [isLoggedIn, isAdmin, navigate]);
 
   return (
-    <Layout minimal>
+        <div style={S.splashRoot}>
+
       {/* Premium Cinematic Stylesheets, Keyframes & Ultra Responsive Overrides */}
       <style>{`
         @keyframes liquidMeshOne {
@@ -59,7 +66,9 @@ export default function StartPage() {
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+                html, body, #root { margin: 0; width: 100%; }
         .animate-fade-in {
+
           animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .delay-1 { animation-delay: 0.15s; opacity: 0; }
@@ -189,18 +198,25 @@ export default function StartPage() {
         <div className="hero-container">
           {/* Right-To-Left Left Column: High-Impact Typography & Controls */}
           <div style={S.heroLeft}>
-            <p className="animate-fade-in" style={S.eyebrow}>
-              ضِيافة — المنصة النخبوية لإدارة الإقامات الفاخرة والحجوزات الآمنة
+            <div className="animate-fade-in" style={S.brandLockup}>
+              <div style={S.brandSeal}><Hotel size={24} strokeWidth={1.8} /></div>
+              <div>
+                <strong style={S.brandName}>ضِيافة</strong>
+                <span style={S.brandCaption}>حجزٌ أوضح، إقامةٌ أهدأ</span>
+              </div>
+            </div>
+            <p className="animate-fade-in delay-1" style={S.eyebrow}>
+              منصة سورية لتنظيم الإقامة والحجوزات
             </p>
-            <h1 className="animate-fade-in delay-1 hero-title">
-              اختر فندقك المفضّل...<br />
-              <span style={S.titleAccent}>ودع عناء التخطيط علينا</span>
+            <h1 className="animate-fade-in delay-2 hero-title">
+              اختر إقامتك بثقة،<br />
+              <span style={S.titleAccent}>ودع عناء المتابعة علينا</span>
             </h1>
-            <p className="animate-fade-in delay-2" style={S.sub}>
-              اكتشف أفقاً جديداً لتنظيم رحلاتك الفاخرة. اختر وجهتك الاستثنائية، قدم طلبك بلمسة، وتولى متابعة الحجز والمسارات المالية المتكاملة بكل أريحية وأمان من نافذة موحدة صممت لرفاهيتك.
+            <p className="animate-fade-in delay-3" style={S.sub}>
+              اكتشف الفنادق والمنتجعات، أرسل طلبك، وتابع حالة الحجز من مكان واحد. تجربة عربية محلية تجمع الوضوح، الموافقة، الدعم، والإشعارات في رحلة بسيطة.
             </p>
             
-            <div className="animate-fade-in delay-3" style={S.ctas}>
+            <div className="animate-fade-in delay-4" style={S.ctas}>
               <button className="btn-luxury-primary" style={S.primary} onClick={() => navigate('/signup')}>
                 أنشئ حسابك الآن 
                 <ArrowLeft size={20} style={{ marginRight: 10 }} />
@@ -210,7 +226,7 @@ export default function StartPage() {
               </button>
             </div>
 
-            <div className="animate-fade-in delay-3 hero-stats">
+            <div className="animate-fade-in delay-4 hero-stats">
               <div className="stat-box" style={S.stat}>
                 <span style={S.statLabel}>منتجعات وفنادق متاحة</span>
                 <strong style={S.statNumber}>{activeHotelsCount}</strong>
@@ -261,8 +277,8 @@ export default function StartPage() {
                   <Wallet size={22} style={{ color: '#BD5B3E' }} />
                 </div>
                 <div style={S.stepContent}>
-                  <strong style={S.stepTitle}>03 / قنوات سداد مشفرة</strong>
-                  <div style={S.small}>فور قبول الطلب، يمكنك تسوية مستحقاتك عبر بروتوكولات دفع بالغة الأمان.</div>
+                  <strong style={S.stepTitle}>03 / خيارات دفع واضحة</strong>
+                  <div style={S.small}>بعد موافقة الإدارة، تظهر لك تعليمات الدفع والحالة المالية للحجز بوضوح.</div>
                 </div>
               </div>
 
@@ -272,8 +288,8 @@ export default function StartPage() {
                   <Clock size={22} style={{ color: '#52655F' }} />
                 </div>
                 <div style={S.stepContent}>
-                  <strong style={S.stepTitle}>04 / إصدار وثيقة الحجز النهائية</strong>
-                  <div style={S.small}>استلم تصريح إقامتك الرقمي الشامل، لتنطلق في رحلتك بمنتهى الطمأنينة.</div>
+                  <strong style={S.stepTitle}>04 / تأكيد الحجز ومتابعته</strong>
+                  <div style={S.small}>استلم إشعارات التحديث، واحتفظ بتفاصيل حجزك لتصل إلى إقامتك براحة.</div>
                 </div>
               </div>
 
@@ -282,19 +298,29 @@ export default function StartPage() {
           </div>
         </div>
       </div>
-    </Layout>
+        </div>
+
   );
 }
 
 const S: Record<string, React.CSSProperties> = {
+  splashRoot: {
+    width: '100%',
+    height: '100vh',
+    minHeight: '100vh',
+    overflow: 'hidden',
+    background: '#FAF6EC'
+  },
   wrap: { 
-    minHeight: '85vh', 
+    minHeight: '100vh',
+    height: '100vh',
     direction: 'rtl',
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
     overflow: 'hidden',
-    padding: '40px 0',
+    boxSizing: 'border-box',
+    padding: '24px 0',
     background: '#FAF6EC',
     fontFamily: "'Tajawal', sans-serif"
   },
@@ -332,6 +358,42 @@ const S: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%'
+  },
+  brandLockup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 22,
+    direction: 'rtl'
+  },
+  brandSeal: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#8B681B',
+    background: 'linear-gradient(135deg, #F6EBCB 0%, #E8D29A 100%)',
+    border: '1px solid rgba(198,154,58,0.45)',
+    boxShadow: '0 12px 24px rgba(198,154,58,0.18)',
+    flexShrink: 0
+  },
+  brandName: {
+    display: 'block',
+    color: '#1C2B27',
+    fontFamily: "'Amiri', serif",
+    fontSize: 27,
+    lineHeight: 1.15,
+    fontWeight: 700
+  },
+  brandCaption: {
+    display: 'block',
+    marginTop: 3,
+    color: '#8B681B',
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.2px'
   },
   heroRight: { 
     display: 'flex', 
