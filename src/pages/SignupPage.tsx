@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import {
-  Globe, Eye, EyeOff, AlertCircle, CheckCircle,
+  Hotel, Eye, EyeOff, AlertCircle, CheckCircle,
   Mail, ArrowRight, RotateCcw, UserPlus,
 } from 'lucide-react';
 
@@ -276,7 +276,7 @@ export default function SignupPage() {
 
         {/* Logo */}
         <div style={S.logo}>
-          <div style={S.logoMark}><Globe size={19} color="#fff" /></div>
+          <div style={S.logoMark}><Hotel size={19} color="#8B681B" strokeWidth={2.2} /></div>
           <span style={S.logoText}>ضِيافة</span>
         </div>
 
@@ -528,7 +528,7 @@ const S: Record<string, React.CSSProperties> = {
   },
   logo:     { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 },
   logoMark: {
-    width: 34, height: 34, background: 'linear-gradient(135deg,#0E5C4A,#0A4437)',
+    width: 34, height: 34, background: 'linear-gradient(135deg,#F6EBCB,#E8D29A)',
     borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 4px 12px rgba(14,92,74,0.28)',
   },
