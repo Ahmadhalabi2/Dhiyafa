@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Globe, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Hotel, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 
 const latticeTile = (color: string, opacity = 0.14) =>
@@ -181,7 +181,7 @@ export default function LoginPage() {
 
         {/* ── LOGO ─────────────────────────────────────────────────────── */}
         <div style={s.logo}>
-          <div style={s.logoMark}><Globe size={19} color="#fff" /></div>
+          <div style={s.logoMark}><Hotel size={19} color="#8B681B" strokeWidth={2.2} /></div>
           <span style={s.logoText}>ضِيافة</span>
         </div>
 
@@ -453,7 +453,7 @@ const s: Record<string, React.CSSProperties> = {
   logo: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 },
   logoMark: {
     width: 36, height: 36,
-    background: 'linear-gradient(135deg, #0E5C4A, #0A4437)',
+    background: 'linear-gradient(135deg, #F6EBCB, #E8D29A)',
     borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 6px 14px rgba(14, 92, 74, 0.28)',
   },
