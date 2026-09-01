@@ -88,7 +88,7 @@ export default function ProfilePage() {
         <p style={S.cardTitle}>إجراءات الحساب</p>
 
         <button style={S.logoutBtn} onClick={handleLogout}>
-          <LogOut size={16} style={{ transform: 'rotate(180deg)' }} /> تسجيل الخروج من ضِيافة
+          <LogOut size={16} style={{ transform: 'rotate(180deg)' }} /> تسجيل الخروج من نُزُل
         </button>
 
         {/* زر حذف الحساب — فقط للمستخدم العادي */}

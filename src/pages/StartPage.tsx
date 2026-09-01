@@ -235,7 +235,7 @@ export default function StartPage() {
             <div className="animate-fade-in brand-lockup" style={S.brandLockup}>
               <div className="brand-seal" style={S.brandSeal}><Hotel size={24} strokeWidth={1.8} /></div>
               <div>
-                <strong style={S.brandName}>ضِيافة</strong>
+                <strong style={S.brandName}>نُزُل</strong>
                 <span style={S.brandCaption}>حجزٌ أوضح، إقامةٌ أهدأ</span>
               </div>
             </div>

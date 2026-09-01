@@ -27,13 +27,13 @@ const transporter = nodemailer.createTransport({
  */
 async function sendOtpEmail(toEmail, userName, otpCode, expiryMinutes = 10) {
   const mailOptions = {
-    from: `"ضيافة" <${process.env.MAIL_USER}>`,
+    from: `"نُزُل" <${process.env.MAIL_USER}>`,
     to: toEmail,
-    subject: `${otpCode} هو رمز التحقق الخاص بك — ضيافة`,
+    subject: `${otpCode} هو رمز التحقق الخاص بك — نُزُل`,
     html: `
       <div dir="rtl" style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <h2 style="color: #2c3e50; text-align: center;">مرحباً ${userName || 'عزيزنا المستخدم'} 👋</h2>
-        <p style="font-size: 16px;">شُكراً لتسجيلك في منصة <strong>ضيافة</strong>.</p>
+        <p style="font-size: 16px;">شُكراً لتسجيلك في منصة <strong>نُزُل</strong>.</p>
         <p style="font-size: 16px;">رمز التحقق الخاص بك لإنشاء الحساب هو:</p>
         <div style="text-align: center; margin: 30px 0;">
           <span style="background-color: #f2f2f2; border: 1px dashed #2c3e50; padding: 12px 24px; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #16a085; border-radius: 6px;">
@@ -55,14 +55,14 @@ async function sendOtpEmail(toEmail, userName, otpCode, expiryMinutes = 10) {
  */
 async function sendPasswordResetEmail(toEmail, userName, otpCode, expiryMinutes = 10) {
   const mailOptions = {
-    from: `"ضيافة" <${process.env.MAIL_USER}>`,
+    from: `"نُزُل" <${process.env.MAIL_USER}>`,
     to: toEmail,
-    subject: `${otpCode} رمز إعادة تعيين كلمة المرور — ضيافة`,
+    subject: `${otpCode} رمز إعادة تعيين كلمة المرور — نُزُل`,
     html: `
       <div dir="rtl" style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <h2 style="color: #2c3e50; text-align: center;">إعادة تعيين كلمة المرور 🔐</h2>
         <p style="font-size: 16px;">مرحباً <strong>${userName || 'عزيزنا المستخدم'}</strong>،</p>
-        <p style="font-size: 16px;">تلقينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong>ضيافة</strong>.</p>
+        <p style="font-size: 16px;">تلقينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong>نُزُل</strong>.</p>
         <p style="font-size: 16px;">رمز التحقق لإعادة التعيين هو:</p>
         <div style="text-align: center; margin: 30px 0;">
           <span style="background-color: #f2f2f2; border: 1px dashed #c0392b; padding: 12px 24px; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #c0392b; border-radius: 6px;">

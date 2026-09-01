@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
           });
           const data = await res.json();
           if (!data.success) return { success: false, message: data.message || 'الإيميل أو كلمة المرور غير صحيحة.' };
-          if (data.token) localStorage.setItem('dhiyafa_token', data.token);
+          if (data.token) localStorage.setItem('nuzul_token', data.token);
           set({ currentUser: data.user, isAuthenticated: true });
           return { success: true, message: data.message || 'مرحباً بعودتك!' };
         } catch {
@@ -68,20 +68,20 @@ export const useAuthStore = create<AuthState>()(
       },
 
       deleteAccount: async () => {
-        const token = localStorage.getItem('dhiyafa_token');
+        const token = localStorage.getItem('nuzul_token');
         if (!token) return { success: false, message: 'الجلسة غير صالحة.' };
         try {
           const res  = await fetch(`${API}/account`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
           const data = await res.json();
           if (!data.success) return { success: false, message: data.message };
-          localStorage.removeItem('dhiyafa_token');
+          localStorage.removeItem('nuzul_token');
           set({ currentUser: null, isAuthenticated: false });
           return { success: true, message: 'تم حذف الحساب بنجاح.' };
         } catch { return { success: false, message: 'تعذّر الاتصال بالخادم.' }; }
       },
 
       uploadAvatar: async (file) => {
-        const token = localStorage.getItem('dhiyafa_token');
+        const token = localStorage.getItem('nuzul_token');
         if (!token) return { success: false, message: 'الجلسة غير صالحة.' };
         try {
           const formData = new FormData();
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       removeAvatar: async () => {
-        const token = localStorage.getItem('dhiyafa_token');
+        const token = localStorage.getItem('nuzul_token');
         if (!token) return { success: false, message: 'الجلسة غير صالحة.' };
         try {
           const res  = await fetch(`${BACKEND}/api/upload/avatar`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('dhiyafa_token');
+        localStorage.removeItem('nuzul_token');
         set({ currentUser: null, isAuthenticated: false });
       },
     }),

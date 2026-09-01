@@ -71,7 +71,7 @@ export default function BookingsPage() {
     if (!isOtpEmail(b.userEmail)) { showEmailToast(false, 'إيميل المستخدم ليس Gmail/Yahoo/Outlook.'); return; }
     setSendingEmail(b.id);
     try {
-      const token = localStorage.getItem('dhiyafa_token') ?? '';
+      const token = localStorage.getItem('nuzul_token') ?? '';
       const res   = await fetch(`${BACKEND}/api/bookings/send-confirmation`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

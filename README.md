@@ -1,4 +1,4 @@
-# ضِيافة — Dhiyafa Booking Dashboard
+# نُزُل — Nuzul Booking Dashboard
 
 منصة حجز فنادق سورية متكاملة مع لوحة تحكم إدارية.
 
@@ -148,7 +148,7 @@ JWT_SECRET=your_secret_key
 OTP_EXPIRY_MINUTES=10
 MAIL_USER=your_gmail@gmail.com
 MAIL_PASS=your_app_password
-MAIL_FROM_NAME=ضيافة - Dhiyafa
+MAIL_FROM_NAME=نُزُل - Nuzul
 MONGODB_URI=mongodb+srv://...
 ```
 

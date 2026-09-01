@@ -1,7 +1,7 @@
 {
-  "name": "dhiyafa-backend",
+  "name": "nuzul-backend",
   "version": "1.0.0",
-  "description": "ضيافة - Backend API with OTP email verification",
+  "description": "نُزُل - Backend API with OTP email verification",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

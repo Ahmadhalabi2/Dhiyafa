@@ -182,7 +182,7 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!data.success) { setError(data.message); return; }
-      if (data.token) localStorage.setItem('dhiyafa_token', data.token);
+      if (data.token) localStorage.setItem('nuzul_token', data.token);
       loginWithToken(data.user);
       navigate('/home', { replace: true });
     } catch {
@@ -227,7 +227,7 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!data.success) { setError(data.message); return; }
-      if (data.token) localStorage.setItem('dhiyafa_token', data.token);
+      if (data.token) localStorage.setItem('nuzul_token', data.token);
       loginWithToken(data.user);
       navigate('/home', { replace: true });
     } catch {
@@ -277,7 +277,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div style={S.logo}>
           <div style={S.logoMark}><Hotel size={19} color="#8B681B" strokeWidth={2.2} /></div>
-          <span style={S.logoText}>ضِيافة</span>
+          <span style={S.logoText}>نُزُل</span>
         </div>
 
         {/* ── زر الرجوع ── */}
@@ -301,7 +301,7 @@ export default function SignupPage() {
         {step === 'form' && (
           <>
             <h1 style={S.title}>إنشاء حساب</h1>
-            <p style={S.sub}>انضم إلى ضِيافة وابدأ حجز إقامتك</p>
+            <p style={S.sub}>انضم إلى نُزُل وابدأ حجز إقامتك</p>
 
             <form onSubmit={handleFormSubmit} style={S.form}>
               <label style={S.label}>الاسم الكامل</label>

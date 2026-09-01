@@ -182,7 +182,7 @@ export default function LoginPage() {
         {/* ── LOGO ─────────────────────────────────────────────────────── */}
         <div style={s.logo}>
           <div style={s.logoMark}><Hotel size={19} color="#8B681B" strokeWidth={2.2} /></div>
-          <span style={s.logoText}>ضِيافة</span>
+          <span style={s.logoText}>نُزُل</span>
         </div>
 
         {/* ══════════════════════ LOGIN VIEW ══════════════════════════════ */}

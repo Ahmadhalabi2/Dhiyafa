@@ -235,11 +235,11 @@ router.post('/send-confirmation', requireAuth, requireRole('superadmin'), async 
   try {
     const html = buildConfirmationHtml(booking);
     await transporter.sendMail({
-      from:    `"${process.env.MAIL_FROM_NAME || 'ضيافة'}" <${process.env.MAIL_USER}>`,
+      from:    `"${process.env.MAIL_FROM_NAME || 'نُزُل'}" <${process.env.MAIL_USER}>`,
       to:      userEmail,
       subject: `✅ تأكيد حجزك في ${booking.hotelName} — ${booking.id}`,
       html,
-      text: `تأكيد حجزك في ضيافة\nرقم الحجز: ${booking.id}\nالفندق: ${booking.hotelName}\nالوصول: ${booking.checkIn}\nالمغادرة: ${booking.checkOut}\nالمبلغ: $${booking.amount}`,
+      text: `تأكيد حجزك في نُزُل\nرقم الحجز: ${booking.id}\nالفندق: ${booking.hotelName}\nالوصول: ${booking.checkIn}\nالمغادرة: ${booking.checkOut}\nالمبلغ: $${booking.amount}`,
     });
     console.log(`[Bookings] Confirmation sent to ${userEmail} for ${booking.id}`);
     return res.json({ success: true, message: 'تم إرسال تأكيد الحجز بنجاح.' });
@@ -275,7 +275,7 @@ function buildConfirmationHtml(booking) {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>تأكيد الحجز — ضيافة</title>
+  <title>تأكيد الحجز — نُزُل</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F3EEE1;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F3EEE1;padding:16px 0;">
@@ -285,7 +285,7 @@ function buildConfirmationHtml(booking) {
         <tr>
           <td style="background:linear-gradient(135deg,#0E5C4A 0%,#0A4437 100%);padding:20px 16px;text-align:center;">
             <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 14px;margin-bottom:6px;">
-              <span style="color:#E8C766;font-size:18px;font-weight:800;letter-spacing:1px;">ضِيافة</span>
+              <span style="color:#E8C766;font-size:18px;font-weight:800;letter-spacing:1px;">نُزُل</span>
             </div>
             <p style="color:#FFFFFF;margin:0;font-size:13px;font-weight:600;">تأكيد الحجز</p>
           </td>
@@ -364,7 +364,7 @@ function buildConfirmationHtml(booking) {
         </tr>
         <tr>
           <td style="background:#F8F4EA;padding:12px 16px;border-top:1px solid #EDE6D6;text-align:center;">
-            <p style="margin:0;font-size:10px;color:#A09484;">© ${year} ضيافة - Dhiyafa · جميع الحقوق محفوظة</p>
+            <p style="margin:0;font-size:10px;color:#A09484;">© ${year} نُزُل - Nuzul · جميع الحقوق محفوظة</p>
           </td>
         </tr>
       </table>

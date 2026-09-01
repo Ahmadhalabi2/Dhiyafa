@@ -1,5 +1,5 @@
 /**
- * server.js — ضيافة Backend
+ * server.js — نُزُل Backend
  * ─────────────────────────────────────────────────────
  * نقطة الدخول الرئيسية للخادم.
  * يشغّل Express + CORS + Rate-limiting + Auth routes.
@@ -49,7 +49,7 @@ app.use('/api/bookings',      bookingsRouter);
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    service: 'dhiyafa-backend',
+    service: 'nuzul-backend',
     time: new Date().toISOString(),
   });
 });
@@ -67,7 +67,7 @@ app.use((err, _req, res, _next) => {
 
 // ── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 ضيافة Backend running at http://localhost:${PORT}`);
+  console.log(`\n🚀 نُزُل Backend running at http://localhost:${PORT}`);
   console.log(`   Health:           http://localhost:${PORT}/api/health`);
   console.log(`   Auth:             POST http://localhost:${PORT}/api/auth/login`);
   console.log(`   Forgot Password:  POST http://localhost:${PORT}/api/auth/forgot-password`);

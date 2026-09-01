@@ -31,7 +31,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('dhiyafa_token') ?? '';
+      const token = localStorage.getItem('nuzul_token') ?? '';
       const res   = await fetch(`${BACKEND_URL}/api/auth/users`, { headers: { Authorization: `Bearer ${token}` } });
       const data  = await res.json();
       if (data.success) setUsers(data.users);
@@ -45,7 +45,7 @@ export default function UsersPage() {
     if (!confirm(`حذف مستخدم "${name}" نهائياً؟`)) return;
     setDeletingId(id);
     try {
-      const token = localStorage.getItem('dhiyafa_token') ?? '';
+      const token = localStorage.getItem('nuzul_token') ?? '';
       const res   = await fetch(`${BACKEND_URL}/api/auth/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       const data  = await res.json();
       if (data.success) {

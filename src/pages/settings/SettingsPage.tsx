@@ -51,7 +51,7 @@ export default function SettingsPage() {
     setSaving(true);
     setProfileMsg(null);
     try {
-      const token = localStorage.getItem('dhiyafa_token') ?? '';
+      const token = localStorage.getItem('nuzul_token') ?? '';
       const res   = await fetch(`${API}/profile`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -59,7 +59,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        if (data.token) localStorage.setItem('dhiyafa_token', data.token);
+        if (data.token) localStorage.setItem('nuzul_token', data.token);
         loginWithToken(data.user);
         setProfileMsg({ type: 'ok', text: 'تم تحديث الاسم بنجاح.' });
       } else {
@@ -80,7 +80,7 @@ export default function SettingsPage() {
     setPwSaving(true);
     setPwMsg(null);
     try {
-      const token = localStorage.getItem('dhiyafa_token') ?? '';
+      const token = localStorage.getItem('nuzul_token') ?? '';
       const res   = await fetch(`${API}/profile`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        if (data.token) localStorage.setItem('dhiyafa_token', data.token);
+        if (data.token) localStorage.setItem('nuzul_token', data.token);
         setCurrentPw(''); setNewPw(''); setConfirmPw('');
         setPwMsg({ type: 'ok', text: 'تم تغيير كلمة المرور بنجاح.' });
       } else {
